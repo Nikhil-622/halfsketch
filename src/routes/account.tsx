@@ -52,7 +52,8 @@ function AccountPage() {
           </div>
         </div>
         <div className="flex items-center gap-8">
-          {isAdminEmail(email) ? <Link to="/admin" className="btn-line">Studio orders</Link> : null}
+          {isAdminEmail(email) ? <Link to="/admin" search={{ tab: "orders" }} className="btn-line">Studio orders</Link> : null}
+          {isAdminEmail(email) ? <Link to="/admin" search={{ tab: "stock" }} className="btn-line">Stock</Link> : null}
           <button type="button" className="btn-line" onClick={() => signOutUser()}>Sign out</button>
         </div>
       </div>

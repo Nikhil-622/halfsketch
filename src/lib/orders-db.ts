@@ -7,7 +7,9 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import { noteCustomer } from "./studio";
 import { firebaseAuth, firebaseDb } from "./firebase";
+import { getProduct } from "./products";
 import type { Order, PricedOrder, SavedOrder } from "./orders.functions";
 
 function db() {
@@ -61,6 +63,9 @@ function asOrder(data: Record<string, unknown>, id: string): SavedOrder {
     total: num("total"),
     status: text("status") || "order_placed",
     createdAt: text("createdAt"),
+    paymentStatus: text("paymentStatus") || "unpaid",
+    fulfillment: text("fulfillment") || "pending",
+    discount: num("discount"),
   };
 }
 
@@ -93,11 +98,14 @@ export async function saveOrder(priced: PricedOrder): Promise<Order> {
         total: priced.total,
         status: "order_placed",
         paymentStatus: "unpaid",
+        fulfillment: "pending",
+        discount: priced.discount ?? 0,
         createdAt,
       });
       return id;
     });
-    return { ...priced, orderId, status: "order_placed", createdAt };
+    noteCustomer(priced.customer.email).catch(() => undefined);
+    return { ...priced, orderId, status: "order_placed", paymentStatus: "unpaid", fulfillment: "pending", createdAt };
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("We couldn't place")) throw error;
     throw blocked(error, "We couldn't place your order. Please try again.");
@@ -130,10 +138,53 @@ export async function listAllOrders(): Promise<SavedOrder[]> {
 
 export async function confirmOrder(orderId: string) {
   if (!/^HS-\d{4}-\d{4}$/.test(orderId)) throw new Error("That order could not be found.");
+  const store = db();
   try {
-    await updateDoc(doc(db(), "orders", orderId), { status: "order_confirmed" });
+    await runTransaction(store, async (tx) => {
+      const orderRef = doc(store, "orders", orderId);
+      const orderSnap = await tx.get(orderRef);
+      if (!orderSnap.exists()) throw new Error("That order could not be found.");
+      const data = orderSnap.data();
+      if (data["status"] === "order_confirmed") return;
+      const items = Array.isArray(data["items"]) ? data["items"] : [];
+      const nextStock: { slug: string; stock: number }[] = [];
+      for (const item of items) {
+        if (!item || typeof item !== "object") continue;
+        const row = item as Record<string, unknown>;
+        const slug = typeof row["slug"] === "string" ? row["slug"] : "";
+        const quantity = Math.floor(Number(row["quantity"]));
+        if (!slug || !Number.isFinite(quantity) || quantity < 1) continue;
+        const invRef = doc(store, "inventory", slug);
+        const invSnap = await tx.get(invRef);
+        const saved = invSnap.exists() ? Number(invSnap.data()["stock"]) : getProduct(slug)?.stock ?? 0;
+        const current = Number.isFinite(saved) && saved > 0 ? 1 : 0;
+        const name = typeof row["name"] === "string" ? row["name"] : slug;
+        if (current < 1) throw new Error(`Not enough of "${name}" left to confirm this order.`);
+        nextStock.push({ slug, stock: 0 });
+      }
+      for (const row of nextStock) tx.set(doc(store, "inventory", row.slug), { stock: row.stock });
+      tx.update(orderRef, { status: "order_confirmed" });
+    });
   } catch (error) {
+    if (error instanceof Error && (error.message.startsWith("Not enough") || error.message.startsWith("That order"))) throw error;
     throw blocked(error, "We couldn't confirm that order.");
   }
   return { orderId, status: "order_confirmed" };
+}
+
+async function patchOrder(orderId: string, patch: Record<string, string>) {
+  if (!/^HS-\d{4}-\d{4}$/.test(orderId)) throw new Error("That order could not be found.");
+  try {
+    await updateDoc(doc(db(), "orders", orderId), patch);
+  } catch (error) {
+    throw blocked(error, "We couldn't update that order.");
+  }
+}
+
+export function markPaid(orderId: string) {
+  return patchOrder(orderId, { paymentStatus: "paid" });
+}
+
+export function markShipped(orderId: string) {
+  return patchOrder(orderId, { fulfillment: "shipped" });
 }

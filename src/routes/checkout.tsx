@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useAuth, type UserProfile } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/products";
-import { PENDING_CHECKOUT_KEY, SHIPPING_RUPEES, type Customer } from "@/lib/orders.functions";
+import { listOffers, quote, type Offer } from "@/lib/offers";
+import { PENDING_CHECKOUT_KEY, PROMO_KEY, SHIPPING_RUPEES, type Customer } from "@/lib/orders.functions";
+import { hasOrdered } from "@/lib/studio";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -46,12 +48,33 @@ function Checkout() {
   const { items, subtotal } = useCart();
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const total = subtotal + SHIPPING_RUPEES;
+  const [draft, setDraft] = useState("");
+  const [promo, setPromo] = useState("");
+  const [rejected, setRejected] = useState(false);
+  const [offers, setOffers] = useState<Offer[]>([]);
+
+  useEffect(() => {
+    listOffers().then(setOffers).catch(() => setOffers([]));
+  }, []);
+  const priced = quote(subtotal, promo, offers, true);
+  const shipping = priced.ok ? priced.shipping : SHIPPING_RUPEES;
+  const discount = priced.ok ? priced.discount : 0;
+  const total = Math.max(0, subtotal - discount + shipping);
+
+  async function applyPromo() {
+    const code = draft.trim().toUpperCase();
+    const offer = offers.find((item) => item.active && item.code === code);
+    const active = offer?.customersOnly ? await hasOrdered(profile?.email || "") : true;
+    const next = quote(subtotal, draft, offers, active);
+    setPromo(next.ok ? draft : "");
+    setRejected(!next.ok);
+  }
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const customer = Object.fromEntries(new FormData(e.currentTarget)) as unknown as Customer;
     sessionStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify(customer));
+    sessionStorage.setItem(PROMO_KEY, promo);
     navigate({ to: "/payment" });
   }
 
@@ -76,7 +99,7 @@ function Checkout() {
             </label>
           ))}
           <div className="col-span-2 bg-paper p-5 text-sm text-muted-foreground">
-            <p><span className="font-medium text-foreground">Next:</span> a Google Pay code for your pieces plus ₹{SHIPPING_RUPEES} shipping. The order is placed after you pay.</p>
+            <p><span className="font-medium text-foreground">Next:</span> a Google Pay code for {shipping === 0 ? "your pieces, with shipping removed." : `your pieces plus ₹${shipping} shipping.`} The order is placed after you pay.</p>
           </div>
           <button type="submit" className="btn-ink col-span-2 justify-center">Proceed to payment</button>
         </form>
@@ -91,9 +114,18 @@ function Checkout() {
               </li>
             ))}
           </ul>
-          <dl className="mt-8 space-y-2 border-t pt-4 text-sm">
+          <div className="mt-8 flex items-end gap-3">
+            <label className="min-w-0 flex-1">
+              <span className="eyebrow text-muted-foreground">Promo code</span>
+              <input value={draft} onChange={(e) => setDraft(e.target.value)} autoComplete="off" className="field" aria-label="Promo code" />
+            </label>
+            <button type="button" className="btn-line shrink-0" onClick={applyPromo}>Apply</button>
+          </div>
+          {rejected ? <p className="mt-2 text-sm text-pink">That code doesn't apply.</p> : null}
+          <dl className="mt-6 space-y-2 border-t pt-4 text-sm">
             <div className="flex justify-between"><dt>Subtotal</dt><dd className="tabular-nums">{formatPrice(subtotal)}</dd></div>
-            <div className="flex justify-between"><dt>Shipping</dt><dd className="tabular-nums">{formatPrice(SHIPPING_RUPEES)}</dd></div>
+            {discount > 0 ? <div className="flex justify-between"><dt>Offer</dt><dd className="tabular-nums">−{formatPrice(discount)}</dd></div> : null}
+            <div className="flex justify-between"><dt>Shipping</dt><dd className="tabular-nums">{formatPrice(shipping)}</dd></div>
             <div className="flex justify-between text-base font-medium"><dt>Total</dt><dd className="tabular-nums">{formatPrice(total)}</dd></div>
           </dl>
         </aside>

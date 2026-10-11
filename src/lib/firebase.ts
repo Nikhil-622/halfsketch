@@ -1,4 +1,4 @@
-import { initializeApp, type FirebaseApp } from "firebase/app";
+import { getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
@@ -32,4 +32,12 @@ export function firebaseAuth(): Auth | null {
 export function firebaseDb(): Firestore | null {
   const ready = firebaseApp();
   return ready ? getFirestore(ready) : null;
+}
+
+/** Firestore for server code, where there is no browser window. */
+export function firebaseDbAnywhere(): Firestore | null {
+  if (!firebaseReady) return null;
+  const existing = getApps().find((item) => item.name === "halfsketch-server");
+  const ready: FirebaseApp = existing ?? initializeApp(firebaseConfig, "halfsketch-server");
+  return getFirestore(ready);
 }

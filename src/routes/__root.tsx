@@ -14,6 +14,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
 import { CartProvider } from "@/lib/cart";
+import { InventoryProvider } from "@/lib/inventory";
+import { useCatalog } from "@/lib/studio";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 
@@ -120,17 +122,20 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useCatalog();
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <AuthProvider>
+        <InventoryProvider>
         <CartProvider>
           <a href="#main" className="sr-only focus:not-sr-only">Skip to content</a>
           <Navbar />
           <main id="main"><Outlet /></main>
           <Footer />
         </CartProvider>
+        </InventoryProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

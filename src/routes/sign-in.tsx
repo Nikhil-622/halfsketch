@@ -60,14 +60,14 @@ function SignInPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-5 py-16">
-      <h1 className="heading">{mode === "in" ? "Sign in" : "Create an account"}</h1>
+    <div className="mx-auto max-w-md px-5 py-6 md:py-16">
+      <h1 className="text-2xl font-semibold tracking-[-0.03em]">{mode === "in" ? "Sign in" : "Create an account"}</h1>
       <p className="mt-4 text-muted-foreground">Use your email, or continue with Google. Your name, address and cart stay with your account.</p>
       {!configured ? (
         <p className="mt-8 bg-paper p-5 text-sm">Sign-in is not configured yet. Add the Firebase values to the env file and restart the site.</p>
       ) : (
         <>
-          <form onSubmit={onSubmit} className="mt-10 space-y-8">
+          <form onSubmit={onSubmit} className="mt-6 space-y-4 md:mt-10 md:space-y-8">
             {mode === "up" && (
               <label className="block">
                 <span className="eyebrow text-muted-foreground">Name</span>
@@ -83,10 +83,10 @@ function SignInPage() {
               <input name="password" type="password" autoComplete={mode === "up" ? "new-password" : "current-password"} required minLength={6} className="field" />
             </label>
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-            <button type="submit" disabled={busy} className="btn-ink w-full justify-center">{busy ? "Please wait…" : mode === "in" ? "Sign in" : "Create account"}</button>
+            <button type="submit" disabled={busy} className="btn-ink w-full justify-center !py-2 md:!py-[0.95rem]">{busy ? "Please wait…" : mode === "in" ? "Sign in" : "Create account"}</button>
           </form>
-          <button type="button" disabled={busy} onClick={onGoogle} className="btn-line mt-6">Continue with Google</button>
-          <button type="button" className="mt-8 block text-sm text-muted-foreground underline" onClick={() => { setMode(mode === "in" ? "up" : "in"); setError(null); }}>
+          <button type="button" disabled={busy} onClick={onGoogle} className="btn-line mt-2 !py-2 md:mt-6 md:!py-[0.95rem]">Continue with Google</button>
+          <button type="button" className="mt-2 block text-sm text-muted-foreground underline md:mt-8" onClick={() => { setMode(mode === "in" ? "up" : "in"); setError(null); }}>
             {mode === "in" ? "New here? Create an account" : "Already have an account? Sign in"}
           </button>
         </>

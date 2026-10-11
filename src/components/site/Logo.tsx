@@ -1,7 +1,6 @@
 /**
- * Wordmark from public/assets/logo.png (1254×1254, artwork centered).
- * The box clips to the letters; mix-blend-multiply lets the white padding
- * take on the page colour. Footer includes the tagline line.
+ * Wordmark from public/assets/logo.png (1254×1254, artwork centered, white knocked out).
+ * The box clips to the letters. Footer includes the tagline line.
  */
 export function Logo({ className = "h-12", withTagline = false }: { className?: string; withTagline?: boolean }) {
   return (
@@ -12,7 +11,7 @@ export function Logo({ className = "h-12", withTagline = false }: { className?: 
       <img
         src="/assets/logo.png"
         alt="Halfस्केच"
-        className="absolute max-w-none mix-blend-multiply"
+        className="absolute max-w-none"
         style={
           withTagline
             ? { width: "167.2%", left: "-41.33%", top: "-63.3%" }

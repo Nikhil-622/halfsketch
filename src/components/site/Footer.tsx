@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="mt-16 border-t bg-paper">
       <div className="mx-auto grid max-w-[1400px] gap-12 px-5 py-16 md:grid-cols-[1.4fr_1fr_1fr] md:px-10">
         <div>
-          <Logo withTagline className="h-36" />
+          <Logo withTagline className="h-20 md:h-36" />
           <p className="mt-4 max-w-xs text-sm text-muted-foreground">Handmade little things, painted with feeling and made to be kept.</p>
         </div>
         <ul className="space-y-3 text-sm">

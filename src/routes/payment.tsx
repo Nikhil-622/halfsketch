@@ -5,11 +5,13 @@ import QRCode from "qrcode";
 import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
+import { listInventory, withStock } from "@/lib/inventory";
 import { saveOrder } from "@/lib/orders-db";
-import { formatPrice } from "@/lib/products";
+import { formatPrice, getProduct } from "@/lib/products";
 import {
   createOrder,
   PENDING_CHECKOUT_KEY,
+  PROMO_KEY,
   UPI_ID,
   upiPayLink,
   type Customer,
@@ -114,7 +116,16 @@ function PaymentPage() {
       sessionStorage.setItem(PLACE_LOCK, cartKey);
       placing = (async () => {
         try {
-          const priced = await createOrder({ data: { customer: buyer, items: snapshot } });
+          const counts = await listInventory();
+          for (const item of snapshot) {
+            const catalog = getProduct(item.slug);
+            const product = catalog ? withStock(catalog, counts) : null;
+            if (!product?.available || item.quantity > product.stock) {
+              throw new Error(product ? `Only ${product.stock} of "${product.name}" left.` : "One of the pieces in your cart is no longer available.");
+            }
+          }
+          const promo = sessionStorage.getItem(PROMO_KEY) ?? "";
+          const priced = await createOrder({ data: { customer: buyer, items: snapshot, promo } });
           const placed = await saveOrder(priced);
           if (user) {
             await saveProfile({
@@ -130,6 +141,7 @@ function PaymentPage() {
           sessionStorage.setItem(PLACED_KEY, JSON.stringify(placed));
           sessionStorage.setItem("halfsketch-last-order", JSON.stringify(placed));
           sessionStorage.removeItem(PENDING_CHECKOUT_KEY);
+          sessionStorage.removeItem(PROMO_KEY);
           sessionStorage.removeItem(PLACE_LOCK);
           clear();
           return placed;

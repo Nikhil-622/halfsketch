@@ -20,6 +20,7 @@ import { Route as OrderConfirmationRouteImport } from './routes/order-confirmati
 import { Route as PaymentRouteImport } from './routes/payment'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as StockRouteImport } from './routes/stock'
 import { Route as StoryRouteImport } from './routes/story'
 import { Route as ShopSlugRouteImport } from './routes/shop_.$slug'
 
@@ -78,6 +79,11 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StockRoute = StockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoryRoute = StoryRouteImport.update({
   id: '/story',
   path: '/story',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/payment': typeof PaymentRoute
   '/shop': typeof ShopRoute
   '/sign-in': typeof SignInRoute
+  '/stock': typeof StockRoute
   '/story': typeof StoryRoute
   '/shop/$slug': typeof ShopSlugRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/payment': typeof PaymentRoute
   '/shop': typeof ShopRoute
   '/sign-in': typeof SignInRoute
+  '/stock': typeof StockRoute
   '/story': typeof StoryRoute
   '/shop/$slug': typeof ShopSlugRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/payment': typeof PaymentRoute
   '/shop': typeof ShopRoute
   '/sign-in': typeof SignInRoute
+  '/stock': typeof StockRoute
   '/story': typeof StoryRoute
   '/shop_/$slug': typeof ShopSlugRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/payment'
     | '/shop'
     | '/sign-in'
+    | '/stock'
     | '/story'
     | '/shop/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/payment'
     | '/shop'
     | '/sign-in'
+    | '/stock'
     | '/story'
     | '/shop/$slug'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/payment'
     | '/shop'
     | '/sign-in'
+    | '/stock'
     | '/story'
     | '/shop_/$slug'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   PaymentRoute: typeof PaymentRoute
   ShopRoute: typeof ShopRoute
   SignInRoute: typeof SignInRoute
+  StockRoute: typeof StockRoute
   StoryRoute: typeof StoryRoute
   ShopSlugRoute: typeof ShopSlugRoute
 }
@@ -278,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stock': {
+      id: '/stock'
+      path: '/stock'
+      fullPath: '/stock'
+      preLoaderRoute: typeof StockRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/story': {
       id: '/story'
       path: '/story'
@@ -307,6 +327,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentRoute: PaymentRoute,
   ShopRoute: ShopRoute,
   SignInRoute: SignInRoute,
+  StockRoute: StockRoute,
   StoryRoute: StoryRoute,
   ShopSlugRoute: ShopSlugRoute,
 }
