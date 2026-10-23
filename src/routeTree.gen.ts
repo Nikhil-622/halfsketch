@@ -12,10 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as MailClubRouteImport } from './routes/mail-club'
 import { Route as OrderConfirmationRouteImport } from './routes/order-confirmation'
 import { Route as PaymentRouteImport } from './routes/payment'
 import { Route as ShopRouteImport } from './routes/shop'
@@ -39,11 +39,6 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ArchiveRoute = ArchiveRouteImport.update({
-  id: '/archive',
-  path: '/archive',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
@@ -57,6 +52,11 @@ const CheckoutRoute = CheckoutRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MailClubRoute = MailClubRouteImport.update({
+  id: '/mail-club',
+  path: '/mail-club',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrderConfirmationRoute = OrderConfirmationRouteImport.update({
@@ -99,10 +99,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
-  '/archive': typeof ArchiveRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/mail-club': typeof MailClubRoute
   '/order-confirmation': typeof OrderConfirmationRoute
   '/payment': typeof PaymentRoute
   '/shop': typeof ShopRoute
@@ -115,10 +115,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
-  '/archive': typeof ArchiveRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/mail-club': typeof MailClubRoute
   '/order-confirmation': typeof OrderConfirmationRoute
   '/payment': typeof PaymentRoute
   '/shop': typeof ShopRoute
@@ -132,10 +132,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
-  '/archive': typeof ArchiveRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/mail-club': typeof MailClubRoute
   '/order-confirmation': typeof OrderConfirmationRoute
   '/payment': typeof PaymentRoute
   '/shop': typeof ShopRoute
@@ -150,10 +150,10 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
-    | '/archive'
     | '/cart'
     | '/checkout'
     | '/contact'
+    | '/mail-club'
     | '/order-confirmation'
     | '/payment'
     | '/shop'
@@ -166,10 +166,10 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
-    | '/archive'
     | '/cart'
     | '/checkout'
     | '/contact'
+    | '/mail-club'
     | '/order-confirmation'
     | '/payment'
     | '/shop'
@@ -182,10 +182,10 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/admin'
-    | '/archive'
     | '/cart'
     | '/checkout'
     | '/contact'
+    | '/mail-club'
     | '/order-confirmation'
     | '/payment'
     | '/shop'
@@ -199,10 +199,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
-  ArchiveRoute: typeof ArchiveRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
+  MailClubRoute: typeof MailClubRoute
   OrderConfirmationRoute: typeof OrderConfirmationRoute
   PaymentRoute: typeof PaymentRoute
   ShopRoute: typeof ShopRoute
@@ -235,13 +235,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/archive': {
-      id: '/archive'
-      path: '/archive'
-      fullPath: '/archive'
-      preLoaderRoute: typeof ArchiveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/cart': {
       id: '/cart'
       path: '/cart'
@@ -261,6 +254,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mail-club': {
+      id: '/mail-club'
+      path: '/mail-club'
+      fullPath: '/mail-club'
+      preLoaderRoute: typeof MailClubRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/order-confirmation': {
@@ -319,10 +319,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
-  ArchiveRoute: ArchiveRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
+  MailClubRoute: MailClubRoute,
   OrderConfirmationRoute: OrderConfirmationRoute,
   PaymentRoute: PaymentRoute,
   ShopRoute: ShopRoute,

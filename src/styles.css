@@ -5,8 +5,11 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-hand: "Caveat", cursive;
+  /* Two faces only: the typewriter for everything, the script for titles. */
+  --font-sans: "Courier Prime", ui-monospace, "Courier New", monospace;
+  --font-hand: var(--font-sans);
+  --font-script: "Mrs Saint Delafield", cursive;
+  --font-mono: "Courier Prime", ui-monospace, "Courier New", monospace;
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: var(--radius);
@@ -34,6 +37,7 @@
 }
 
 :root {
+  --tabbar: 3.75rem; /* height of the phone bottom navigation */
   --radius: 2px;
   --background: oklch(0.982 0.006 80);        /* #FAF8F4 warm paper */
   --foreground: oklch(0.205 0 0);             /* #171717 charcoal */
@@ -70,24 +74,28 @@
     overflow-x: clip;
   }
   input, select, textarea { min-width: 0; max-width: 100%; }
+  a, button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   :focus-visible { outline: 2px solid var(--color-pink); outline-offset: 3px; }
   ::selection { background: var(--color-pink); color: var(--color-foreground); }
 }
 
 @utility font-hand { font-family: var(--font-hand); }
 
+@utility font-script { font-family: var(--font-script); font-weight: 400; letter-spacing: 0; }
 @utility display {
-  font-weight: 600;
-  letter-spacing: -0.035em;
-  line-height: 0.95;
-  font-size: clamp(2.6rem, 7vw, 6.5rem);
+  font-family: var(--font-script);
+  font-weight: 400;
+  line-height: 1.05;
+  font-size: clamp(3.4rem, 8.5vw, 8rem);
 }
 @utility heading {
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  font-size: clamp(2rem, 4.5vw, 3.75rem);
+  font-family: var(--font-script);
+  font-weight: 400;
+  line-height: 1.1;
+  font-size: clamp(2.8rem, 5.5vw, 5rem);
 }
+@utility type { font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.7; }
+@utility accent { font-family: var(--font-mono); font-style: italic; font-size: 1.05rem; line-height: 1.6; color: var(--color-pink); }
 @utility eyebrow {
   font-size: 0.7rem;
   letter-spacing: 0.22em;
@@ -103,18 +111,19 @@
   &:hover { background-size: 100% 2px; }
 }
 @utility btn-ink {
-  display: inline-flex; align-items: center; gap: 0.6rem;
-  padding: 0.95rem 1.6rem;
-  background: var(--color-foreground); color: var(--color-background);
-  font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500;
-  transition: background 0.3s ease, color 0.3s ease;
-  &:hover { background: var(--color-pink); color: var(--color-foreground); }
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
+  min-height: 2.75rem; padding: 0.95rem 2.2rem;
+  border: 1px solid var(--color-foreground);
+  background: var(--color-background); color: var(--color-foreground);
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.24em; text-transform: uppercase;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  &:hover { background: var(--color-pink); border-color: var(--color-pink); }
   &:disabled { opacity: 0.5; pointer-events: none; }
 }
 @utility btn-line {
   display: inline-flex; align-items: center; gap: 0.6rem;
-  padding: 0.95rem 0; border-bottom: 1px solid var(--color-foreground);
-  font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500;
+  min-height: 2.75rem; padding: 0.95rem 0; border-bottom: 1px solid var(--color-foreground);
+  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase;
   transition: color 0.3s ease, border-color 0.3s ease;
   &:hover { color: var(--color-pink); border-color: var(--color-pink); }
 }
@@ -135,4 +144,21 @@
 @utility sketch-line {
   stroke-dasharray: 600; stroke-dashoffset: 600;
   animation: draw 2.2s ease forwards 0.4s;
+}
+
+/* Paint-brush cursor on laptops/desktops only. The bristle tip is the click point; it turns pink over anything clickable. */
+@media (hover: hover) and (pointer: fine) {
+  html { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><g stroke='%23FAF8F4' stroke-width='6' stroke-linecap='round' fill='none'><path d='M29 3 L11 21'/></g><path d='M11 21 Q4 23 2 30 Q9 28 11 21 Z' fill='%23FAF8F4' stroke='%23FAF8F4' stroke-width='3' stroke-linejoin='round'/><path d='M29 3 L15 17' stroke='%238B5A3C' stroke-width='3.2' stroke-linecap='round'/><path d='M15 17 L11 21' stroke='%23A9A196' stroke-width='4' stroke-linecap='round'/><path d='M11 21 Q4 23 2 30 Q9 28 11 21 Z' fill='%232A2421' stroke='%232A2421' stroke-width='0.8' stroke-linejoin='round'/></svg>") 2 30, auto; }
+  a, button, summary, select, label:has(input[type="checkbox"], input[type="file"]), [role="button"] { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><g stroke='%23FAF8F4' stroke-width='6' stroke-linecap='round' fill='none'><path d='M29 3 L11 21'/></g><path d='M11 21 Q4 23 2 30 Q9 28 11 21 Z' fill='%23FAF8F4' stroke='%23FAF8F4' stroke-width='3' stroke-linejoin='round'/><path d='M29 3 L15 17' stroke='%238B5A3C' stroke-width='3.2' stroke-linecap='round'/><path d='M15 17 L11 21' stroke='%23A9A196' stroke-width='4' stroke-linecap='round'/><path d='M11 21 Q4 23 2 30 Q9 28 11 21 Z' fill='%23F184A2' stroke='%232A2421' stroke-width='0.8' stroke-linejoin='round'/></svg>") 2 30, pointer; }
+  input, textarea { cursor: text; }
+  :disabled, [aria-disabled="true"] { cursor: not-allowed; }
+}
+
+/* The little paint dab left where you click (see useBrushDabs in __root.tsx). */
+@keyframes dab { from { transform: scale(0.3); opacity: 0.9; } to { transform: scale(1.7); opacity: 0; } }
+.brush-dab {
+  position: fixed; z-index: 9999; width: 26px; height: 26px; margin: -13px 0 0 -13px; pointer-events: none;
+  border-radius: 52% 44% 56% 47%;
+  background: radial-gradient(circle, color-mix(in oklab, var(--color-pink) 75%, transparent) 0 40%, transparent 72%);
+  animation: dab 0.7s ease-out forwards;
 }

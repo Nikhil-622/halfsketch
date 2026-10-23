@@ -6,7 +6,7 @@ export interface Customer {
   customerName: string; email: string; phone: string;
   address: string; city: string; state: string; postalCode: string;
 }
-export interface OrderItem { slug: string; name: string; price: number; quantity: number }
+export interface OrderItem { slug: string; name: string; price: number; quantity: number; edition?: string }
 export { PROMO_CODE, SHIPPING_RUPEES };
 export const PROMO_KEY = "halfsketch-promo";
 export const PENDING_CHECKOUT_KEY = "halfsketch-pending-checkout";
@@ -32,8 +32,11 @@ export type SavedOrder = Order;
 export type PricedOrder = Omit<Order, "orderId" | "createdAt">;
 
 export function orderStatusLabel(status: string) {
+  if (status === "order_cancelled") return "Order cancelled";
   return status === "order_confirmed" ? "Order confirmed" : "Order placed";
 }
+
+export const isMailClub = (order: Pick<Order, "items">) => order.items.some((item) => item.edition);
 
 interface Input { customer: Customer; items: { slug: string; quantity: number }[]; promo?: string }
 
@@ -61,8 +64,11 @@ export const createOrder = createServerFn({ method: "POST" })
     for (const i of data.items) {
       const p = await serverProduct(i.slug);
       if (!p || p.status === "retired") throw new Error("One of the pieces in your cart is no longer available.");
-      if (i.quantity !== 1) throw new Error(`Only 1 of "${p.name}" can be ordered.`);
-      items.push({ slug: p.slug, name: p.name, price: p.price, quantity: i.quantity });
+      if (p.price <= 0 || p.status === "coming-soon") throw new Error(`"${p.name}" isn't available to order yet.`);
+      if (!p.available || p.stock < 1) throw new Error(`"${p.name}" is sold out.`);
+      // Any quantity up to what the studio has left (set in Admin → Stock).
+      if (!Number.isInteger(i.quantity) || i.quantity < 1 || i.quantity > p.stock) throw new Error(`Only ${p.stock} of "${p.name}" left.`);
+      items.push({ slug: p.slug, name: p.name, price: p.price, quantity: i.quantity, ...(p.edition ? { edition: p.edition } : {}) });
     }
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
     const offers = await listOffersServer();

@@ -42,7 +42,7 @@ function AccountPage() {
 
   const email = user.email ?? "";
   return (
-    <div className="mx-auto max-w-[1000px] px-5 pt-12 md:px-10">
+    <div className="mx-auto max-w-[1000px] px-5 pt-8 md:px-10 md:pt-12">
       <div className="flex flex-wrap items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <Avatar email={email} photoURL={user.photoURL} className="size-14 text-lg" />
@@ -51,15 +51,15 @@ function AccountPage() {
             <p className="mt-1 text-lg">{email}</p>
           </div>
         </div>
-        <div className="flex items-center gap-8">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
           {isAdminEmail(email) ? <Link to="/admin" search={{ tab: "orders" }} className="btn-line">Studio orders</Link> : null}
           {isAdminEmail(email) ? <Link to="/admin" search={{ tab: "stock" }} className="btn-line">Stock</Link> : null}
           <button type="button" className="btn-line" onClick={() => signOutUser()}>Sign out</button>
         </div>
       </div>
-      <h1 className="heading mt-16">My orders</h1>
+      <h1 className="heading mt-10 md:mt-16">My orders</h1>
       {error ? <p className="mt-8 text-pink">{error}</p> : null}
-      {orders ? <OrderList orders={orders} /> : !error ? <p className="mt-10 text-muted-foreground">Loading your orders…</p> : null}
+      {orders ? <OrderList orders={orders} /> : !error ? <p className="type mt-10">Loading your orders…</p> : null}
     </div>
   );
 }

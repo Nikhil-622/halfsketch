@@ -1,165 +1,183 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRef } from "react";
+import { ArrowRight } from "lucide-react";
 import { ProductCard } from "@/components/site/ProductCard";
 import { PersonalCta } from "@/components/site/PersonalCta";
-import { IMAGES, INSTAGRAM_URL, liveProducts } from "@/lib/products";
+import { IMAGES, INSTAGRAM_URL, MAIL_CLUB, liveProducts } from "@/lib/products";
 import { useCatalog } from "@/lib/studio";
+
+const HERO = "/illustrations/fox-studio.svg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Halfस्केच — Handmade art, bookmarks, postcards & polaroids" },
-      { name: "description", content: "A tiny independent art studio. Hand-painted bookmarks, postcards and polaroid artwork — a little unfinished, a lot of you." },
+      { title: "Halfस्केच — Handmade art, bookmarks, postcards & calendars" },
+      { name: "description", content: "A tiny independent art studio. Hand-painted bookmarks, postcards and calendars — a little unfinished, a lot of you." },
       { property: "og:title", content: "Halfस्केच — A little unfinished. A lot of you." },
-      { property: "og:description", content: "Hand-painted bookmarks, postcards and polaroid artwork, made to be kept." },
+      { property: "og:description", content: "Hand-painted bookmarks, postcards and calendars, made to be kept." },
     ],
-    links: [
-      { rel: "preload", as: "image", href: IMAGES.studio, media: "(max-width: 767px)" },
-      { rel: "preload", as: "image", href: IMAGES.studio, media: "(min-width: 768px)" },
-    ],
+    links: [{ rel: "preload", as: "image", href: HERO }],
   }),
   component: Home,
 });
 
 const wrap = "mx-auto max-w-[1400px] px-5 md:px-10";
+const frame = "border border-foreground/30 bg-paper object-cover shadow-[0_10px_30px_-18px_rgb(0_0_0/0.45)]";
+
+// Cover photo per collection: drop a file in public/assets/ and put its path in `img`. Empty = "photo coming soon".
+const COLLECTIONS = [
+  { name: "Postcards", img: "/assets/happy_diwali_postcard.jpg", to: "/shop", category: "postcards" },
+  { name: "Bookmarks", img: "/assets/red_house_bookmark.png", to: "/shop", category: "bookmarks" },
+  { name: "Calendars", img: "", to: "/shop", category: "calendars" },
+] as const;
 
 function Home() {
   useCatalog();
-  const recent = liveProducts().filter((p) => p.status !== "retired").sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4);
+  const recent = liveProducts().filter((p) => p.status !== "retired" && !p.edition).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4);
+  const rail = useRef<HTMLDivElement>(null);
   return (
     <>
-      {/* HERO */}
-      <section className="relative min-h-[calc(100svh-2.75rem)] overflow-hidden md:min-h-0 md:pt-16">
-        <div className="absolute inset-0 md:hidden">
-          <div className="relative flex h-full min-h-[22rem] flex-col justify-end overflow-hidden">
-            <img src={IMAGES.studio} alt="Hand-painted polaroids from the Halfस्केच collection" width={1024} height={1536}
-              fetchPriority="high" decoding="async"
-              className="absolute inset-0 h-full w-full object-cover object-[center_35%]" />
-            <div className="relative px-5 pb-6">
-              <h1 className="text-xl font-bold leading-none tracking-[-0.035em] text-foreground">
-                A little unfinished.<br />
-                <span className="text-pink">A lot of you.</span>
-              </h1>
-              <p className="mt-1.5 max-w-xs text-xs font-bold text-foreground">Handmade little things, painted with feeling and made to be kept.</p>
-              <Link to="/shop" className="btn-ink mt-3 !px-4 !py-2 !text-[0.62rem] whitespace-nowrap">Explore the collection</Link>
+      {/* HERO — one full-bleed background picture with the words laid over it (swap HERO for the finished painting) */}
+      <section className="relative isolate overflow-hidden">
+        {/* phones: a soft, blurred copy of the picture fills the hero behind the words… */}
+        <img src={HERO} alt="" aria-hidden width={1600} height={1000} decoding="async"
+          className="absolute inset-0 -z-20 h-full w-full scale-[1.4] object-cover blur-md md:hidden" />
+        <div aria-hidden className="absolute inset-0 -z-20 bg-background/45 md:hidden" />
+        {/* …and the whole picture sits sharp underneath, fading in at its top edge. Laptops: full-bleed cover. */}
+        <img src={HERO} alt="" width={1600} height={1000} fetchPriority="high" decoding="async"
+          className="absolute inset-x-0 bottom-0 -z-10 h-auto w-full [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_22%)] [mask-image:linear-gradient(to_bottom,transparent,black_22%)] md:inset-0 md:h-full md:object-cover md:object-bottom md:[-webkit-mask-image:none] md:[mask-image:none]" />
+        <div className="animate-reveal flex min-h-[calc(85svh-3.5rem)] flex-col items-center justify-center px-5 pb-[calc(62.5vw+0.5rem)] pt-8 text-center md:min-h-[calc(100svh-3.6rem)] md:justify-start md:pb-6 md:pt-[9vh]">
+          <h1 className="font-script text-[clamp(2.9rem,11vw,9.5rem)] leading-[0.95] [text-shadow:0_0_28px_var(--color-background),0_0_10px_var(--color-background)]">
+            A little unfinished.<br />
+            <span className="text-pink">A lot of you.</span>
+          </h1>
+          <p className="type mx-auto mt-5 max-w-sm [text-shadow:0_0_12px_var(--color-background),0_0_4px_var(--color-background)]">
+            Handmade little things, painted with feeling and made to be kept. Pull up a chair in our tiny studio.
+          </p>
+          <div className="mx-auto mt-7 flex w-full max-w-xs flex-col gap-3 md:mt-8">
+            <Link to="/shop" className="btn-ink w-full bg-background/85">Explore the collection</Link>
+            <Link to="/mail-club" className="btn-ink w-full bg-background/85">Explore the Mail Club</Link>
+          </div>
+        </div>
+        <span className="sr-only">Illustration: a fox in a beret and striped sweater painting a sunset bookmark by the window.</span>
+      </section>
+
+      {/* THE MAIL CLUB — its own corner, separate from the collections */}
+      <section className="border-y border-foreground/20 bg-paper">
+        <div className={`${wrap} py-12 md:py-24`}>
+          <h2 className="flex items-end gap-3">
+            <span className="pb-2 text-xl md:text-2xl">The</span>
+            <span className="font-script text-6xl leading-none md:text-8xl">Mail Club</span>
+          </h2>
+          <div className="mt-6 grid items-center gap-8 md:mt-10 md:grid-cols-2 md:gap-14">
+            <Link to="/mail-club" className="group block overflow-hidden">
+              <img src={MAIL_CLUB.cover} alt="A kraft envelope sealed with pink wax among autumn leaves" loading="lazy" decoding="async" width={1000} height={1000}
+                className={`${frame} aspect-[3/2] w-full transition duration-700 group-hover:scale-[1.02]`} />
+            </Link>
+            <div>
+              <p className="eyebrow text-muted-foreground">{MAIL_CLUB.editionLabel} · one-time parcel</p>
+              <p className="font-script mt-2 text-5xl leading-none md:text-6xl">{MAIL_CLUB.theme}</p>
+              <p className="accent mt-4">“{MAIL_CLUB.message}”</p>
+              <p className="type mt-4 max-w-md">A little parcel of handmade art and stationery, posted to your door once — no subscription, nothing renews.</p>
+              <ul className="mt-5 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+                {MAIL_CLUB.includes.map((item) => <li key={item.name} className="flex gap-2"><span aria-hidden className="text-pink">✦</span>{item.name}</li>)}
+              </ul>
+              <Link to="/mail-club" className="btn-ink mt-8 w-full max-w-xs bg-transparent">Explore the Mail Club</Link>
             </div>
           </div>
         </div>
-        <div aria-hidden className="pointer-events-none absolute inset-0 hidden scale-110 bg-cover bg-center opacity-40 blur-2xl md:block md:bg-[url('/assets/collection_polaroid.webp')]" />
-        <div className="pointer-events-none absolute inset-0 hidden bg-gradient-to-b from-background/85 via-background/55 to-background md:block" aria-hidden />
-        <div className={`${wrap} relative hidden md:grid md:grid-cols-12 md:items-start md:gap-10`}>
-          <div className="animate-reveal md:col-span-6 md:pt-10">
-            <h1 className="font-semibold leading-[0.95] tracking-[-0.035em] md:text-[clamp(2.6rem,7vw,6.5rem)]">
-              A little unfinished.<br />
-              <span className="text-pink">A lot of you.</span>
-            </h1>
-            <p className="mt-8 max-w-sm text-lg text-muted-foreground">Handmade little things, painted with feeling and made to be kept.</p>
-            <div className="mt-10 flex flex-wrap items-center gap-8">
-              <Link to="/shop" className="btn-ink whitespace-nowrap">Explore the collection</Link>
-              <Link to="/story" className="btn-line">Our story</Link>
-            </div>
-          </div>
-          <div className="relative md:col-span-6">
-            <picture>
-              <source media="(min-width: 768px)" srcSet={IMAGES.studio} />
-              <img src={IMAGES.studioPhone} alt="Hand-painted polaroids from the Halfस्केच collection" width={1024} height={1536}
-                decoding="async" className="ml-auto aspect-[4/5] w-[82%] object-cover" />
-            </picture>
-            <div className="absolute -bottom-10 left-0 w-[46%] rotate-[-4deg] bg-background p-2 pb-8 shadow-sm">
-              <span className="tape -top-3 left-1/3 rotate-6" />
-              <picture>
-                <source media="(min-width: 768px)" srcSet={IMAGES.polaroid} />
-                <img src={IMAGES.studioPhone} alt="Tiny painted sunset in a polaroid frame" width={896} height={1152} decoding="async" className="aspect-square w-full object-cover" />
-              </picture>
-            </div>
-          </div>
-        </div>
       </section>
 
-      {/* WHY */}
-      <section className={`${wrap} mt-8 grid gap-4 md:mt-12 md:grid-cols-12 md:gap-10`}>
-        <p className="eyebrow text-muted-foreground md:col-span-3">Why Halfस्केच?</p>
-        <div className="md:col-span-8">
-          <h2 className="text-2xl font-semibold leading-none tracking-[-0.03em] md:text-[clamp(2rem,4.5vw,3.75rem)]">Not everything needs to be perfectly finished to <em className="not-italic text-pink">mean</em> something.</h2>
-          <div className="mt-4 grid gap-4 text-muted-foreground sm:grid-cols-2 md:mt-8 md:gap-8">
-            <p>A wobbly line. A petal that went a bit too pink. The edge we decided not to clean up. These are the parts that tell you a person was here.</p>
-            <p>We make small things — the kind you tuck into a book, pin above a desk, or post to someone far away — and let them keep a little of the hand that made them.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* TWO PEOPLE */}
-      <section className="mt-8 bg-paper py-8 md:mt-12 md:py-10">
-        <div className={`${wrap} grid items-center gap-6 md:grid-cols-2 md:gap-12`}>
-          <Link to="/story" aria-label="Our story" className="block">
-            <img src="/assets/about_us.jpeg" alt="Nikhil and Disha" loading="lazy" decoding="async" fetchPriority="low" width={1344} height={896} className="aspect-[3/2] w-full bg-background object-contain" />
-          </Link>
-          <div>
-            <p className="eyebrow text-muted-foreground">Our story</p>
-            <h2 className="heading mt-2">Two people.<br />One little idea.</h2>
-            <dl className="mt-4 space-y-4 md:mt-6">
-              <div><dt className="font-hand text-3xl text-pink">Nikhil</dt><dd className="mt-1 text-muted-foreground">Paints every piece. The brush, the lines, the little mistakes — that's him.</dd></div>
-              <div><dt className="font-hand text-3xl text-pink">Disha</dt><dd className="mt-1 text-muted-foreground">The ideas, the direction, the sourcing, the planning — and every post and parcel that reaches you.</dd></div>
-            </dl>
-            <Link to="/story" className="btn-line mt-4">Read the whole story</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* COLLECTION */}
-      <section className={`${wrap} mt-8 md:mt-12`}>
-        <h2 className="max-w-3xl text-3xl font-semibold leading-[0.95] tracking-[-0.035em] md:text-[clamp(2.6rem,7vw,6.5rem)]">Little things worth keeping.</h2>
-        <div className="mt-6 grid min-w-0 max-w-full gap-6 md:mt-10 md:grid-cols-12">
-          <CollectionTile className="md:col-span-5 md:row-span-2" img="/assets/group_bookmark_sm.jpg" ratio="aspect-[3/4]" name="Bookmarks" line="For stories you keep returning to." contain />
-          <CollectionTile className="md:col-span-7" img={IMAGES.postcard} ratio="aspect-[4/3]" name="Postcards" line="Tiny pieces of places, people & memories." />
-          <CollectionTile className="md:col-span-5 md:col-start-8 md:-mt-0" img={IMAGES.studio} ratio="aspect-square" name="Polaroids" line="For moments that deserve more than a camera roll." contain />
-        </div>
-      </section>
-
-      {/* RECENTLY SKETCHED */}
-      <section className={`${wrap} mt-8 min-w-0 max-w-full md:mt-12`}>
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b pb-3">
-          <div>
-            <h2 className="heading">Recently Sketched</h2>
-            <p className="mt-3 text-muted-foreground">A few little things we've been working on lately.</p>
-          </div>
-          <Link to="/shop" className="btn-line">See everything</Link>
-        </div>
-        <div className="mt-4 grid min-w-0 grid-cols-2 gap-x-4 gap-y-8 md:mt-8 md:grid-cols-4 md:gap-6">
-          {recent.map((p) => <ProductCard key={p.id} product={p} compact />)}
-        </div>
-      </section>
-
-      {/* INSTAGRAM */}
-      <section className={`${wrap} mt-8 grid items-center gap-6 md:mt-12 md:grid-cols-[1fr_1.4fr] md:gap-10`}>
-        <div>
-          <h2 className="heading">Follow the sketchbook.</h2>
-          <p className="mt-3 text-muted-foreground">New pieces, works in progress and the occasional mistake — first on Instagram.</p>
-          <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="btn-line mt-3">halfsketch.in</a>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {[IMAGES.polaroid, IMAGES.studio, IMAGES.bookmark, IMAGES.postcard, "/assets/cart_bookmark.png", "/assets/sunset_bookmark.png"].map((src, i) => (
-            <a key={i} href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="block overflow-hidden" aria-label="View on Instagram">
-              <img src={src} alt="" loading="lazy" decoding="async" fetchPriority="low" className="aspect-square w-full object-cover transition duration-500 hover:scale-105" />
-            </a>
+      {/* ALL COLLECTIONS */}
+      <section className={`${wrap} py-12 md:py-24`}>
+        <h2 className="flex items-end gap-3">
+          <span className="pb-2 text-xl md:text-2xl">All</span>
+          <span className="font-script text-6xl leading-none md:text-8xl">Collections</span>
+        </h2>
+        <div ref={rail} className="mt-6 flex snap-x md:mt-10 snap-mandatory gap-5 overflow-x-auto pb-2 [scrollbar-width:none] md:gap-6">
+          {COLLECTIONS.map((c) => (
+            <Link key={c.name} to={c.to} search={"category" in c ? { category: c.category } : {}}
+              className="group w-[78%] shrink-0 snap-start sm:w-[45%] md:w-[31%]">
+              <div className="aspect-[3/2] overflow-hidden bg-paper">
+                {c.img ? (
+                  <img src={c.img} alt={c.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]" />
+                ) : (
+                  <div className="grid h-full w-full place-items-center border border-dashed border-foreground/30 text-center">
+                    <div>
+                      <p className="font-script text-5xl leading-none text-pink">{c.name}</p>
+                      <p className="mt-3 text-[0.6rem] uppercase tracking-[0.14em] text-muted-foreground">Fresh pieces coming soon</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <h3 className="mt-4 text-2xl">{c.name}</h3>
+              <span className="btn-ink mt-3 !px-5 !py-2 !text-[0.6rem] group-hover:bg-pink">View collection</span>
+            </Link>
           ))}
+        </div>
+        <button type="button" aria-label="Next collection" className="mx-auto mt-8 block p-2 transition hover:translate-x-1 hover:text-pink"
+          onClick={() => rail.current?.scrollBy({ left: rail.current.clientWidth * 0.8, behavior: "smooth" })}>
+          <ArrowRight className="size-7" strokeWidth={1.2} />
+        </button>
+      </section>
+
+      {/* RECENTLY SKETCHED — hidden for now. Remove this comment wrapper (and its closing marker below) to bring it back.
+      <section className="relative isolate overflow-hidden border-y border-foreground/20">
+        <div aria-hidden className="absolute inset-0 -z-10 scale-110 bg-[url('/assets/collection_polaroid.webp')] bg-cover bg-center opacity-50 blur-2xl" />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-background/55" />
+        <div className={`${wrap} grid items-center gap-10 py-14 md:grid-cols-2 md:py-24`}>
+          <img src={IMAGES.studio} alt="Hand-painted polaroids from the Halfस्केच collection" loading="lazy" decoding="async" width={1024} height={1536}
+            className={`${frame} mx-auto aspect-[4/5] w-full max-w-md`} />
+          <div className="text-center md:text-right">
+            <p className="font-script text-6xl leading-none md:text-8xl">Recently sketched</p>
+            <p className="type mt-8 italic">fresh from the sketchbook</p>
+            <p className="mt-2 font-mono text-3xl font-bold tracking-wide md:text-4xl">Latest Collection</p>
+            <p className="type mt-4 md:ml-auto md:max-w-xs">Step inside a world of little suns, wildflowers and quiet streets — the newest pieces to leave our desk.</p>
+            <Link to="/shop" className="btn-ink mt-8 min-w-56">View all artwork</Link>
+          </div>
+        </div>
+      </section>
+
+      {recent.length ? (
+        <section className={`${wrap} min-w-0 max-w-full py-14 md:py-20`}>
+          <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 md:gap-6">
+            {recent.map((p) => <ProductCard key={p.id} product={p} compact />)}
+          </div>
+        </section>
+      ) : null}
+      */}
+
+      {/* ABOUT US */}
+      <section className="border-y border-foreground/20 bg-paper px-5 py-16 text-center md:py-20">
+        <h2 className="font-script text-6xl leading-none md:text-7xl">Nikhil &amp; Disha</h2>
+        <p className="type mx-auto mt-6 max-w-md">
+          We are two people with one little idea: small, handmade things that keep a little of the hand that made them. He paints every piece; she dreams them up and sends each one to you.
+        </p>
+        <Link to="/story" className="btn-ink mt-8 min-w-56 bg-transparent">Read our story</Link>
+      </section>
+
+      {/* THE SKETCHBOOK — collage */}
+      <section className={`${wrap} grid items-center gap-10 py-12 md:grid-cols-2 md:gap-12 md:py-24`}>
+        <div className="relative mx-auto aspect-square w-full max-w-xl">
+          <img src="/assets/group_bookmark_sm.jpg" alt="" loading="lazy" className={`${frame} absolute left-[12%] top-[16%] z-10 h-[66%] w-[38%]`} />
+          <img src="/assets/auto_postcard.jpeg" alt="" loading="lazy" className={`${frame} absolute left-0 top-[44%] z-20 h-[40%] w-[34%]`} />
+          <img src={IMAGES.studioPhone} alt="" loading="lazy" className={`${frame} absolute right-[10%] top-0 z-20 h-[56%] w-[36%]`} />
+          <img src="/assets/cat_postcard.jpeg" alt="" loading="lazy" className={`${frame} absolute bottom-0 right-[22%] z-30 h-[32%] w-[30%]`} />
+        </div>
+        <div className="md:pl-6">
+          <p className="text-xl uppercase tracking-[0.12em]">The</p>
+          <h2 className="font-script text-7xl leading-none text-pink md:text-8xl">Sketchbook</h2>
+          <p className="type mt-6 max-w-sm">
+            Here you can follow everything as it happens: new pieces, works in progress and the occasional happy mistake. Each one starts with a pencil line and ends when we decide to stop.
+          </p>
+          <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Follow halfsketch.in on Instagram" className="mt-10 inline-flex items-center gap-4 transition hover:translate-x-1 hover:text-pink">
+            <ArrowRight className="size-14" strokeWidth={1} />
+            <span className="type">@halfsketch.in</span>
+          </a>
         </div>
       </section>
 
       <PersonalCta />
     </>
-  );
-}
-
-function CollectionTile({ img, name, line, ratio, className, contain = false }: { img: string; name: string; line: string; ratio: string; className: string; contain?: boolean }) {
-  return (
-    <Link to="/shop" search={{ category: name.toLowerCase() }} className={`group block min-w-0 max-w-full ${className}`}>
-      <div className={`overflow-hidden bg-paper ${ratio}`}>
-        <img src={img} alt={name} loading="lazy" decoding="async" fetchPriority="low" className={`h-full max-w-full w-full transition duration-700 group-hover:scale-[1.03] ${contain ? "object-contain p-4" : "object-cover"}`} />
-      </div>
-      <div className="mt-4 flex items-baseline justify-between gap-4">
-        <h3 className="eyebrow">{name}</h3>
-        <p className="min-w-0 text-right font-hand text-sm text-muted-foreground md:whitespace-nowrap md:text-xl">{line}</p>
-      </div>
-    </Link>
   );
 }

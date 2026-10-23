@@ -1,4 +1,4 @@
-export type Category = "bookmarks" | "postcards" | "polaroids";
+export type Category = "bookmarks" | "postcards" | "calendars" | "mail-club";
 export type ProductStatus = "new" | "limited" | "sold-out" | "retired" | "coming-soon" | null;
 
 export interface Product {
@@ -20,6 +20,10 @@ export interface Product {
   mrp?: number;
   collection?: string;
   variants?: string;
+  /** Set on multi-copy editions (e.g. a Mail Club box). They keep a real copy count instead of being one of a kind. */
+  edition?: string;
+  /** Listed automatically from a photo named <name>_bookmark|_postcard|_calendar.png in public/assets/. */
+  fromFile?: boolean;
 }
 
 export interface Listing {
@@ -43,7 +47,8 @@ export interface Listing {
 export const CATEGORY_LABEL: Record<Category, string> = {
   bookmarks: "Bookmarks",
   postcards: "Postcards",
-  polaroids: "Polaroids",
+  calendars: "Calendars",
+  "mail-club": "Mail Club",
 };
 
 export const STATUS_LABEL: Record<Exclude<ProductStatus, null>, string> = {
@@ -56,145 +61,132 @@ export const STATUS_LABEL: Record<Exclude<ProductStatus, null>, string> = {
 
 // Product imagery: drop new files in public/assets/, then point a product at /assets/<filename>.
 export const IMAGES = {
-  bookmark: "/assets/lotus_bookmark.png",
-  postcard: "/assets/house_postcard.png",
-  polaroid: "/assets/sunset_polaroid.png",
+  // Shown for an admin-added piece that has no photo yet.
+  placeholder: "/halfsketch-logo.png",
   studio: "/assets/collection_polaroid.webp",
   studioPhone: "/assets/collection_polaroid_sm.jpg",
 };
 
-const spec = (size?: string) => [
+export const spec = (size?: string) => [
   ...(size ? [{ label: "Size", value: size }] : []),
   { label: "Paper", value: "240gsm paper" },
   { label: "Medium", value: "Watercolour & ink, hand-painted" },
   { label: "Finish", value: "Matte, unvarnished" },
 ];
 
+// The Mail Club bundle: ₹299 by default (a price saved in Admin → Products overrides it). Copies are set in
+// Admin → Stock; until there is at least one copy the page shows "Pre-orders open soon".
+// Artwork: drop photos in public/assets/ and fill in the `image` paths below. Empty = a labelled placeholder.
+export const MAIL_CLUB = {
+  slug: "november-mail-club",
+  edition: "mail-club-2026-11",
+  editionLabel: "November edition",
+  theme: "The Art of Doing Nothing",
+  message: "A little reminder that you don't have to be productive every minute of the day.",
+  cover: "/illustrations/mail-club-envelope.svg",
+  // Optional text shown under shipping, e.g. "Posted in the first week of November". Leave empty until decided.
+  shipsNote: "",
+  includes: [
+    { name: "Sleepy ginger cat postcard", line: "A ginger cat asleep among fallen autumn leaves — for rest, comfort and slow days.", image: "" },
+    { name: "Ivy-covered doorway bookmark", line: "A little doorway wrapped in ivy, to keep between the pages of whatever you're reading.", image: "" },
+    { name: "November calendar", line: "The whole month on one page, with the same sleepy cat keeping you company.", image: "" },
+    { name: "Three art stamps", line: "Tiny stamp-style artworks — the cat, the leaves and the doorway. Decorative, not postage.", image: "" },
+    { name: "A personal letter", line: "A handwritten-style note from us, about the guilt of doing nothing and the comfort of quiet days.", image: "" },
+  ],
+  // The letter as it will be printed, one paragraph per entry. Leave empty until the final letter is ready —
+  // the page then shows only its opening ("Dear you,") and says the rest arrives in the parcel.
+  letter: [] as string[],
+} as const;
+
 // To add a product, append an object here — everything else updates automatically.
 export const PRODUCTS: Product[] = [
   {
-    id: "p1", name: "Birds at Sunset", slug: "birds-at-sunset", category: "bookmarks", price: 119,
-    description: "A slim bookmark of birds on a wire, painted into an orange and red sunset.",
-    story: "Six little silhouettes, and a sky that couldn't decide between gold and red. We let it keep both.",
-    details: spec(), images: ["/assets/sunset_bookmark.png"], available: true, stock: 6, status: "new",
-    sketchNo: "001", createdAt: "2026-10-08",
+    id: "mc-2026-11", name: "November Mail Club", slug: MAIL_CLUB.slug, category: "mail-club", price: 299,
+    description: `${MAIL_CLUB.theme}. ${MAIL_CLUB.message} A one-time parcel of handmade art and stationery.`,
+    story: "A small parcel of handmade art and stationery, posted once, for the slow days of November.",
+    details: [
+      { label: "Edition", value: `${MAIL_CLUB.editionLabel} · one-time purchase` },
+      { label: "Inside", value: "Postcard, bookmark, calendar, 3 art stamps, a letter" },
+      { label: "Medium", value: "Watercolour & ink, hand-painted originals, printed with care" },
+    ],
+    images: [MAIL_CLUB.cover], available: false, stock: 0, status: "coming-soon",
+    edition: MAIL_CLUB.edition, collection: "Mail Club", createdAt: "2026-10-24",
   },
   {
-    id: "p14", name: "A Lotus in Bloom", slug: "lotus-in-bloom", category: "bookmarks", price: 119,
-    description: "A bookmark of a pink lotus opening on a wash of yellow and rose.",
-    story: "A flower that never quite finishes opening — yellow at the top, pink at the stem, and a few leaves that decided to curl.",
-    details: spec(), images: ["/assets/lotus_bookmark.png"], available: true, stock: 6, status: "new",
-    sketchNo: "013", createdAt: "2026-10-08",
+    id: "b-red-house", name: "The Little Red House", slug: "red-house-bookmark", category: "bookmarks", price: 119,
+    description: "A small red cottage on a green hill, a lone pine and a wide summer sky — tied with a cotton tassel.",
+    story: "Some places you only visit in books. This one sits at the top of a quiet hill, with one pine tree for company and clouds drifting past as slowly as they like.\n\nWe painted it for the pages you read on lazy afternoons — so that every time you open your book, there's a little house waiting, door open, kettle probably on.",
+    feeling: "Calm · homely · sunny · unhurried",
+    details: [
+      { label: "Medium", value: "Hand-painted" },
+      { label: "Finish", value: "Cotton tassel" },
+    ],
+    images: ["/assets/red_house_bookmark.png"], available: true, stock: 1, status: "new",
+    collection: "Everyday", createdAt: "2026-10-24",
   },
   {
-    id: "p13", name: "The Corner Cart", slug: "the-corner-cart", category: "bookmarks", price: 119,
-    description: "A bookmark of a blue rickshaw waiting under a shuttered window.",
-    story: "Every street has one — a cart that is always a little crooked, and a window that has seen the whole afternoon.",
-    details: spec(), images: ["/assets/cart_bookmark.png"], available: true, stock: 6, status: "new",
-    sketchNo: "012", createdAt: "2026-10-08",
+    id: "p-happy-diwali", name: "A Diya for Diwali", slug: "happy-diwali-postcard", category: "postcards", price: 180,
+    description: "A glowing clay diya, fireworks blooming above it and marigolds in every corner — painted in soft watercolour.",
+    story: "Diwali always starts small: one diya, one flame, and then the whole sky joins in. We painted that moment — the warm little lamp, the fireworks opening like flowers, and \"Happy Diwali!\" written by hand in gold.\n\nSend it to someone you miss this festival, tuck it into a box of sweets, or keep it on your shelf long after the last cracker has gone quiet.",
+    feeling: "Festive · warm · bright · hopeful",
+    details: [
+      { label: "Medium", value: "Hand-painted watercolour" },
+      { label: "Lettering", value: "Hand-written \"Happy Diwali!\"" },
+    ],
+    images: ["/assets/happy_diwali_postcard.jpg"], available: true, stock: 1, status: "new",
+    collection: "Gift", createdAt: "2026-10-24",
   },
-  {
-    id: "p12", name: "Snow at the Window", slug: "snow-at-the-window", category: "bookmarks", price: 119,
-    description: "A bookmark of a red house in the snow, under a violet night sky.",
-    story: "Painted for the kind of evening that stays indoors — a small house, bare trees, and snow that never quite settles.",
-    details: spec(), images: ["/assets/snow_bookmark.png"], available: true, stock: 6, status: "new",
-    sketchNo: "011", createdAt: "2026-10-08",
-  },
-  {
-    id: "p17", name: "A Winter Moon", slug: "winter-moon", category: "bookmarks", price: 119,
-    description: "A bookmark of bare trees under a full moon, with snow falling through a blue night.",
-    story: "A tall tree, a few smaller ones behind it, and a moon that stayed out long enough to be painted.\n\nA Winter Moon is the quiet part of a snowfall — white dots on a blue sky, and branches that haven't decided to bend.",
-    details: spec(), images: ["/assets/icy_bookmark.png"], available: true, stock: 6, status: "new",
-    sketchNo: "016", createdAt: "2026-10-10",
-  },
-  {
-    id: "p18", name: "With Great Power", slug: "with-great-power", category: "bookmarks", price: 119,
-    description: "A bookmark of a red masked face, and a handwritten line about power and responsibility.",
-    story: "Half a face, one white eye, and a sentence written small at the top of a black page.\n\nWith Great Power is a little reminder you can keep between the pages — red webbing, a quiet mask, and the line that follows.",
-    details: spec(), images: ["/assets/spidy_bookmark.jpeg"], available: true, stock: 6, status: "new",
-    sketchNo: "017", createdAt: "2026-10-10",
-  },
-  {
-    id: "p2", name: "Somewhere Worth Writing From", slug: "house-in-the-field", category: "postcards", price: 180,
-    description: "A little countryside scene that feels like a place you'd want to send a postcard from.",
-    story: "Imagine finding a little place far away from the noise.\n\nA small house. Open fields. Flowers moving with the breeze. A sky with enough room to make you forget what time it is.\n\nSomewhere Worth Writing From feels like the kind of place you'd stop at for a while — and before leaving, you'd sit down and write to someone you miss.",
-    feeling: "Quiet · nostalgic · comforting · distant · hopeful",
-    details: spec("6 × 4 inches"), images: ["/assets/house_postcard.png"], available: true, stock: 10, status: "new",
-    sketchNo: "002", createdAt: "2026-10-08",
-  },
-  {
-    id: "p15", name: "Over the Wall", slug: "cats-on-the-wall", category: "postcards", price: 180,
-    description: "A postcard of a black cat and three white kittens keeping watch from a yellow brick wall.",
-    story: "A pink evening, a wall the colour of turmeric, and four cats who have already decided the view is theirs.\n\nOne is still climbing. The others have settled in, white against the sky, as if the wall was built for exactly this.",
-    feeling: "Playful · warm · curious · bright · familiar",
-    details: spec("6 × 4 inches"), images: ["/assets/cat_postcard.jpeg"], available: true, stock: 10, status: "new",
-    sketchNo: "014", createdAt: "2026-10-10",
-  },
-  {
-    id: "p16", name: "She's On Her Way", slug: "pink-auto", category: "postcards", price: 180,
-    description: "A postcard of a pink auto rickshaw, painted with the line विठ्ठी आ रही है.",
-    story: "Someone has decorated the rickshaw with flowers, a flamingo, and a little gold trim — and written across the sky that she is on her way.\n\nShe's On Her Way is the moment just before the street fills up. The auto is ready. The note is already written.",
-    feeling: "Joyful · festive · bright · playful · expectant",
-    details: spec("6 × 4 inches"), images: ["/assets/auto_postcard.jpeg"], available: true, stock: 10, status: "new",
-    sketchNo: "015", createdAt: "2026-10-10",
-  },
-  {
-    id: "p3", name: "A Little Bouquet of Sunshine", slug: "little-bouquet", category: "polaroids", price: 79,
-    description: "A little bundle of flowers, wrapped in the warmth of a golden afternoon.",
-    story: "Some gifts don't need a reason.\n\nA few flowers gathered together, tied with a little ribbon, and carried home simply because they made you think of someone.\n\nA Little Bouquet of Sunshine is a tiny reminder of those gestures — the ones that don't need a special occasion to mean something.",
-    feeling: "Warm · joyful · thoughtful · sunny · nostalgic",
-    details: spec("8 × 6 cm"), images: ["/assets/bouquet_polaroid.png"], available: true, stock: 8, status: "new",
-    sketchNo: "003", createdAt: "2026-10-08",
-  },
-  {
-    id: "p7", name: "Where the Wildflowers Grow", slug: "cat-in-the-daisies", category: "polaroids", price: 79,
-    description: "A quiet little moment in a field of flowers, where everything feels a little softer.",
-    story: "Somewhere between the flowers, the grass, and the afternoon light, there's a little place where you can simply be.\n\nWhere the Wildflowers Grow captures that feeling — sitting quietly in a field, surrounded by tiny flowers, with nowhere you need to be. And maybe that's what makes the moment worth keeping.",
-    feeling: "Peaceful · dreamy · cozy · gentle · free",
-    details: spec("8 × 6 cm"), images: ["/assets/cat_polaroid.png"], available: true, stock: 8, status: "new",
-    sketchNo: "006", createdAt: "2026-10-08",
-  },
-  {
-    id: "p8", name: "The Field in Bloom", slug: "red-field", category: "polaroids", price: 79,
-    description: "A little field of red blooms, caught somewhere between wild and wonderfully alive.",
-    story: "There's something about a field in bloom that makes you want to slow down.\n\nNo perfect arrangement. No flowers growing exactly where they're supposed to. Just little pops of red rising through the green, doing their own thing.\n\nThe Field in Bloom is a tiny reminder that beauty doesn't always need to be arranged — sometimes it simply grows where it wants to.",
-    feeling: "Free · lively · warm · natural · joyful",
-    details: spec("8 × 6 cm"), images: ["/assets/roses_polaroid.png"], available: true, stock: 8, status: "new",
-    sketchNo: "007", createdAt: "2026-10-08",
-  },
-  {
-    id: "p9", name: "The Beauty of Endings", slug: "beautiful-endings", category: "polaroids", price: 79,
-    description: "A little sunset for the endings that deserve to be remembered.",
-    story: "Not every ending is something to be sad about.\n\nSometimes an ending is simply the sky changing colour, the day becoming quieter, and a little light reminding you that something beautiful can come after.\n\nThe Beauty of Endings is a tiny reminder to let some things end gently — and to notice the beauty they leave behind.",
-    feeling: "Warm · hopeful · nostalgic · reflective · peaceful",
-    details: spec("8 × 6 cm"), images: ["/assets/sunset_polaroid.png"], available: true, stock: 8, status: "new",
-    sketchNo: "008", createdAt: "2026-10-08",
-  },
-  {
-    id: "p10", name: "Where the Night Meets the Sea", slug: "night-whale", category: "polaroids", price: 79,
-    description: "A little piece of the ocean, painted under a sky full of stars.",
-    story: "There are some places where the world feels impossibly quiet — just the sea below, the stars above, and a moment that doesn't need anything else.\n\nWhere the Night Meets the Sea is a tiny escape into that kind of stillness. A little blue world to keep close, for whenever you need somewhere quieter to go.",
-    feeling: "Dreamy · peaceful · mysterious · free · comforting",
-    details: spec("8 × 6 cm"), images: ["/assets/whale_polaroid.png"], available: true, stock: 8, status: "new",
-    sketchNo: "009", createdAt: "2026-10-08",
-  },
-  {
-    id: "p11", name: "I've Fallen for You", slug: "fallen-for-you", category: "polaroids", price: 79,
-    description: "A tiny love story told in two leaves — because sometimes falling is the sweetest part.",
-    story: "Two little leaves, one confession, and a very obvious fall.\n\nI've Fallen for You is a playful little love note disguised as a tiny painting. It's simple, slightly silly, and sweet in the way the best little things often are — a small piece made to make someone smile.",
-    feeling: "Playful · sweet · romantic · whimsical · lighthearted",
-    details: spec("8 × 6 cm"),
-    images: ["/assets/leaves_card.png"], available: true, stock: 8, status: "new",
-    sketchNo: "010", createdAt: "2026-10-08",
-  },
-  {
-    id: "p6", name: "Monsoon Street", slug: "monsoon-street", category: "postcards", price: 199,
-    description: "A loose postcard sketch of a street just after the rain.",
-    story: "Retired from the collection — but kept in the archive because we still like it.",
-    details: spec("6 × 4 inches"), images: ["/products/monsoon-street.jpg?v=2"], available: false, stock: 0, status: "retired",
-    sketchNo: "005", createdAt: "2026-07-14",
-  },
+  // New pieces go here. Example (photo in public/assets/, category "bookmarks" | "postcards" | "calendars"):
+  // {
+  //   id: "b1", name: "Piece name", slug: "piece-name", category: "bookmarks", price: 119,
+  //   description: "One line for the card.", story: "A short paragraph for the product page.",
+  //   details: spec("5 × 18 cm"), images: ["/assets/piece_name.jpg"], available: true, stock: 1, status: "new",
+  //   createdAt: "2026-10-24",
+  // },
 ];
+
+// Photo-listed pieces: save a photo in public/assets/ as <name>_bookmark.png, <name>_postcard.png or
+// <name>_calendar.png and it appears in that section of the shop, named from the file
+// ("red_house_bookmark.png" → "Red House", at /shop/red-house-bookmark). It starts at the usual price for
+// its kind; change any price in Admin → Products. Calendars have no usual price yet, so they show
+// "Coming soon" until one is set there. A piece written out in PRODUCTS above with the same slug wins.
+const FILE_KINDS = {
+  bookmark: { category: "bookmarks", price: 119, line: "A hand-painted bookmark, made to keep your place in the stories you love." },
+  postcard: { category: "postcards", price: 180, line: "A hand-painted postcard — to keep, to frame, or to send to someone far away." },
+  calendar: { category: "calendars", price: 0, line: "A hand-painted calendar to keep the days company." },
+} as const satisfies Record<string, { category: Category; price: number; line: string }>;
+
+export function productFromFile(path: string): Product | null {
+  const file = path.split("/").pop() ?? "";
+  const match = /^(.+)_(bookmark|postcard|calendar)\.png$/i.exec(file);
+  if (!match) return null;
+  const words = match[1]!.split(/[^a-z0-9]+/i).filter(Boolean);
+  if (!words.length) return null;
+  const kind = FILE_KINDS[match[2]!.toLowerCase() as keyof typeof FILE_KINDS];
+  const open = kind.price > 0;
+  return {
+    id: `file-${file}`,
+    name: words.map((w) => w[0]!.toUpperCase() + w.slice(1).toLowerCase()).join(" "),
+    slug: `${words.join("-").toLowerCase()}-${match[2]!.toLowerCase()}`,
+    category: kind.category,
+    price: kind.price,
+    description: kind.line,
+    story: kind.line,
+    details: [],
+    images: [`/assets/${file}`],
+    available: open,
+    stock: 1,
+    status: open ? "new" : "coming-soon",
+    createdAt: "",
+    fromFile: true,
+  };
+}
+
+// Vite lists the matching files at build time; nothing is imported from them.
+for (const path of Object.keys(import.meta.glob("/public/assets/*_{bookmark,postcard,calendar}.png"))) {
+  const piece = productFromFile(path);
+  if (piece && !PRODUCTS.some((p) => p.slug === piece.slug)) PRODUCTS.push(piece);
+}
 
 const HAMPER_TIERS = [299, 399, 499, 599];
 export { HAMPER_TIERS };
@@ -229,7 +221,7 @@ function pieceFrom(row: Listing): Product {
     description: row.description || "",
     story: row.description || "",
     details: [],
-    images: [row.image || IMAGES.bookmark],
+    images: [row.image || IMAGES.placeholder],
     available: true,
     stock: row.stock ?? 1,
     status: "new",
@@ -259,6 +251,12 @@ export function overlay(product: Product, row?: Listing): Product {
   else delete next.mrp;
   if (row.collection) next.collection = row.collection;
   if (row.variants) next.variants = row.variants;
+  if (product.edition || product.fromFile) {
+    // Editions and photo-listed pieces open only once they have a price (and, for editions, copies).
+    const open = next.price > 0 && next.stock > 0;
+    next.available = open;
+    next.status = open ? (product.edition ? "limited" : "new") : next.price > 0 && typeof row.stock === "number" ? "sold-out" : "coming-soon";
+  }
   return next;
 }
 

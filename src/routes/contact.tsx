@@ -41,9 +41,9 @@ function Contact() {
   }
 
   return (
-    <div className="mx-auto max-w-[1000px] px-5 py-16 md:px-10">
+    <div className="mx-auto max-w-[1000px] px-5 py-8 md:px-10 md:py-16">
       <h1 className="display">Say hello.</h1>
-      <p className="mt-8 max-w-lg text-lg text-muted-foreground">Custom requests, personalised artwork, questions about an order or a collaboration idea — we're happiest talking on Instagram. You can also leave a note here.</p>
+      <p className="type mt-6 max-w-lg md:mt-8">Custom requests, personalised artwork, questions about an order or a collaboration idea — we're happiest talking on Instagram. You can also leave a note here.</p>
       <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="btn-ink mt-10">DM us on Instagram →</a>
       <form onSubmit={onSubmit} className="mt-12 grid max-w-lg gap-4">
         <input name="name" required placeholder="Name" className="field" />
@@ -53,7 +53,7 @@ function Contact() {
         <button className="btn-ink justify-center" disabled={busy}>{busy ? "Sending…" : "Send to the studio"}</button>
         {note ? <p className="text-sm text-muted-foreground">{note}</p> : null}
       </form>
-      <p className="font-hand mt-12 text-2xl text-pink">we usually reply within a day or two</p>
+      <p className="accent mt-12">we usually reply within a day or two</p>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import {
 } from "firebase/firestore";
 import { noteCustomer } from "./studio";
 import { firebaseAuth, firebaseDb } from "./firebase";
-import { getProduct } from "./products";
+import { PRODUCTS } from "./products";
 import type { Order, PricedOrder, SavedOrder } from "./orders.functions";
 
 function db() {
@@ -43,7 +43,8 @@ function asOrder(data: Record<string, unknown>, id: string): SavedOrder {
         const price = Number(row["price"]);
         const quantity = Number(row["quantity"]);
         if (!slug || !Number.isFinite(price) || !Number.isFinite(quantity)) return [];
-        return [{ slug, name, price, quantity }];
+        const edition = typeof row["edition"] === "string" ? row["edition"] : "";
+        return [edition ? { slug, name, price, quantity, edition } : { slug, name, price, quantity }];
       })
     : [];
   return {
@@ -93,6 +94,8 @@ export async function saveOrder(priced: PricedOrder): Promise<Order> {
         state: c.state,
         postalCode: c.postalCode,
         items: priced.items,
+        // Lets the studio query "every November Mail Club order" directly.
+        editions: [...new Set(priced.items.flatMap((item) => item.edition ? [item.edition] : []))],
         subtotal: priced.subtotal,
         shipping: priced.shipping,
         total: priced.total,
@@ -146,6 +149,7 @@ export async function confirmOrder(orderId: string) {
       if (!orderSnap.exists()) throw new Error("That order could not be found.");
       const data = orderSnap.data();
       if (data["status"] === "order_confirmed") return;
+      if (data["status"] === "order_cancelled") throw new Error("That order was cancelled.");
       const items = Array.isArray(data["items"]) ? data["items"] : [];
       const nextStock: { slug: string; stock: number }[] = [];
       for (const item of items) {
@@ -154,15 +158,15 @@ export async function confirmOrder(orderId: string) {
         const slug = typeof row["slug"] === "string" ? row["slug"] : "";
         const quantity = Math.floor(Number(row["quantity"]));
         if (!slug || !Number.isFinite(quantity) || quantity < 1) continue;
-        const invRef = doc(store, "inventory", slug);
-        const invSnap = await tx.get(invRef);
-        const saved = invSnap.exists() ? Number(invSnap.data()["stock"]) : getProduct(slug)?.stock ?? 0;
-        const current = Number.isFinite(saved) && saved > 0 ? 1 : 0;
+        // The count the studio set in Admin → Stock, or the catalogue's starting count if never set.
+        const listSnap = await tx.get(doc(store, "listings", slug));
+        const saved = listSnap.exists() ? Number(listSnap.data()["stock"]) : NaN;
+        const left = Number.isFinite(saved) ? Math.floor(saved) : PRODUCTS.find((p) => p.slug === slug)?.stock ?? 0;
         const name = typeof row["name"] === "string" ? row["name"] : slug;
-        if (current < 1) throw new Error(`Not enough of "${name}" left to confirm this order.`);
-        nextStock.push({ slug, stock: 0 });
+        if (left < quantity) throw new Error(`Not enough of "${name}" left to confirm this order.`);
+        nextStock.push({ slug, stock: left - quantity });
       }
-      for (const row of nextStock) tx.set(doc(store, "inventory", row.slug), { stock: row.stock });
+      for (const row of nextStock) tx.set(doc(store, "listings", row.slug), { stock: row.stock }, { merge: true });
       tx.update(orderRef, { status: "order_confirmed" });
     });
   } catch (error) {
@@ -187,4 +191,9 @@ export function markPaid(orderId: string) {
 
 export function markShipped(orderId: string) {
   return patchOrder(orderId, { fulfillment: "shipped" });
+}
+
+// Only unpaid, unconfirmed orders can be cancelled, so no stock has been taken and no refund is owed.
+export function cancelOrder(orderId: string) {
+  return patchOrder(orderId, { status: "order_cancelled" });
 }

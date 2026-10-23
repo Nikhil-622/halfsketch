@@ -39,7 +39,7 @@ function asListing(id: string, data: Record<string, unknown>): Listing {
   if (stock !== undefined) row.stock = stock;
   if (data["soldOut"] === true) row.soldOut = true;
   const category = data["category"];
-  if (category === "bookmarks" || category === "postcards" || category === "polaroids") row.category = category;
+  if (category === "bookmarks" || category === "postcards" || category === "calendars" || category === "mail-club") row.category = category;
   if (text("collection")) row.collection = text("collection");
   if (text("variants")) row.variants = text("variants");
   if (text("image")) row.image = text("image");
@@ -77,7 +77,7 @@ export async function serverProduct(slug: string): Promise<Product | undefined> 
     const blank: Product = {
       id: slug, name: row.name || "Untitled piece", slug, category: (row.category ?? "bookmarks") as Category,
       price: row.price ?? 0, description: row.description || "", story: row.description || "", details: [],
-      images: [row.image || "/assets/lotus_bookmark.png"], available: true, stock: row.stock ?? 1, status: "new",
+      images: [row.image || "/halfsketch-logo.png"], available: true, stock: row.stock ?? 1, status: "new",
       createdAt: row.createdAt || "",
     };
     return overlay(blank, row);

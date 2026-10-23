@@ -1,15 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { useInventory } from "@/lib/inventory";
 import { CATEGORY_LABEL, STATUS_LABEL, formatPrice, type Product } from "@/lib/products";
 
-export function ProductCard({ product: catalog, tall = false, compact = false }: { product: Product; tall?: boolean; compact?: boolean }) {
-  const { apply } = useInventory();
-  const product = apply(catalog);
+export function ProductCard({ product, tall = false, compact = false }: { product: Product; tall?: boolean; compact?: boolean }) {
   const soldOut = product.status === "sold-out" || (!product.available && product.status !== "retired" && product.status !== "coming-soon");
   const frame = compact ? "aspect-square p-2" : `${tall ? "aspect-[3/4]" : "aspect-[4/5]"} p-4`;
   return (
     <Link to="/shop/$slug" params={{ slug: product.slug }} className="group block min-w-0 max-w-full">
-      <div className={`relative overflow-hidden bg-paper ${frame}`}>
+      <div className={`relative overflow-hidden border border-foreground/15 bg-paper ${frame}`}>
         <img
           src={product.images[0]}
           alt={product.name}
@@ -28,7 +25,7 @@ export function ProductCard({ product: catalog, tall = false, compact = false }:
           <p className="mt-1 truncate text-[0.58rem] font-medium uppercase tracking-[0.08em] text-muted-foreground">{CATEGORY_LABEL[product.category]}</p>
         </div>
         <p className="shrink-0 text-right text-sm tabular-nums">
-          {soldOut ? <span className="text-muted-foreground">—</span> : (
+          {soldOut || product.price <= 0 ? <span className="text-muted-foreground">—</span> : (
             <>
               {product.mrp ? <span className="block text-xs text-muted-foreground line-through">{formatPrice(product.mrp)}</span> : null}
               {formatPrice(product.price)}
