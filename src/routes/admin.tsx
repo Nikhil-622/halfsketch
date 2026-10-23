@@ -2,12 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { isAdminEmail } from "@/lib/admins";
 import { useAuth } from "@/lib/auth";
-import { useInventory } from "@/lib/inventory";
 import { listOffers, removeOffer, saveOffer, type Offer } from "@/lib/offers";
-import { confirmOrder, listAllOrders, markPaid, markShipped } from "@/lib/orders-db";
-import { PROMO_CODE, type SavedOrder } from "@/lib/orders.functions";
-import { CATEGORY_LABEL, HAMPER_TIERS, catalogState, formatPrice, liveProducts, type Category, type Listing } from "@/lib/products";
-import { COLLECTIONS, compressImage, listReviews, listTickets, removeReview, saveListing, setTicketStatus, suggestReply, useCatalog, type Review, type Ticket } from "@/lib/studio";
+import { cancelOrder, confirmOrder, listAllOrders, markPaid, markShipped } from "@/lib/orders-db";
+import { isMailClub, orderStatusLabel, PROMO_CODE, type SavedOrder } from "@/lib/orders.functions";
+import { CATEGORY_LABEL, HAMPER_TIERS, PRODUCTS, catalogState, formatPrice, installListings, liveProducts, type Category, type Listing } from "@/lib/products";
+import { COLLECTIONS, compressImage, listListings, listReviews, listTickets, removeReview, saveListing, setTicketStatus, suggestReply, useCatalog, type Review, type Ticket } from "@/lib/studio";
 
 const tabs = [
   { id: "overview", label: "Overview" },
@@ -43,6 +42,7 @@ function when(iso: string) {
 }
 
 function stage(order: SavedOrder) {
+  if (order.status === "order_cancelled") return "cancelled";
   if (order.fulfillment === "shipped") return "shipped";
   if (order.paymentStatus === "paid") return "paid";
   return "pending";
@@ -72,8 +72,8 @@ function AdminPage() {
 
   return (
     <div className="mx-auto max-w-[1000px] px-4 pt-4 text-sm leading-snug md:px-10">
-      <p className="font-hand text-xl leading-none text-pink">the studio desk</p>
-      <h1 className="mt-1 text-xl font-semibold leading-none">Studio</h1>
+      <p className="accent leading-none">the studio desk</p>
+      <h1 className="heading mt-1">Studio</h1>
       {!user || !admin ? (
         <div className="mt-12 max-w-md">
           <p className="text-muted-foreground">This page is only for the studio.</p>
@@ -127,39 +127,63 @@ function Overview({ orders, tickets, reviews }: { orders: SavedOrder[] | null; t
 }
 
 function StockTab({ setError }: { setError: (message: string | null) => void }) {
-  const { apply, save } = useInventory();
+  const { ready, listings } = useCatalog();
   const [busy, setBusy] = useState("");
-  const pieces = liveProducts().filter((product) => product.status !== "retired").map(apply);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const pieces = liveProducts().filter((product) => product.status !== "retired");
+  // The real count, even while a piece is paused with Sold out.
+  const countOf = (slug: string) => listings[slug]?.stock ?? PRODUCTS.find((p) => p.slug === slug)?.stock ?? 0;
+  async function save(slug: string, patch: Partial<Listing>) {
+    setBusy(slug);
+    setError(null);
+    try { await saveListing({ slug, ...patch }); }
+    catch (err) { setError(err instanceof Error ? err.message : "We couldn't update that piece."); }
+    finally { setBusy(""); }
+  }
   return (
     <section className="mt-4">
       <h2 className={h2}>Stock</h2>
-      <p className={note}>Each piece is one. Mark it sold out to take it off the shop, or put it back.</p>
+      <p className={note}>Set how many of each piece you have. Confirm stock on an order takes its quantity off, and a piece shows Sold out on its own at 0. Use Sold out to pause a piece any time, and Put back to sell it again.</p>
+      {!ready ? <p className="mt-3 text-muted-foreground">Loading stock…</p> : null}
       <ul className="mt-2 divide-y rounded-xl border">
-        {pieces.map((product) => (
-          <li key={product.slug} className="flex items-center justify-between gap-2 px-3 py-2">
-            <div className="min-w-0">
-              <p className="truncate font-medium leading-tight">{product.name}</p>
-              <p className="text-xs text-muted-foreground">{product.stock === 0 ? "Sold out" : "Quantity 1"}</p>
-            </div>
-            <button type="button" className={pill(false)} disabled={busy === product.slug} onClick={async () => {
-              setBusy(product.slug);
-              setError(null);
-              try { await save(product.slug, product.stock === 0 ? 1 : 0); }
-              catch (err) { setError(err instanceof Error ? err.message : "We couldn't update that piece."); }
-              finally { setBusy(""); }
-            }}>{product.stock === 0 ? "Put back" : "Sold out"}</button>
-          </li>
-        ))}
+        {pieces.map((product) => {
+          const count = countOf(product.slug);
+          const paused = listings[product.slug]?.soldOut === true;
+          const draft = drafts[product.slug] ?? String(count);
+          const changed = Math.max(0, Math.floor(Number(draft) || 0)) !== count;
+          const unit = product.edition ? "copies" : "in stock";
+          return (
+            <li key={product.slug} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+              <div className="min-w-0">
+                <p className="truncate font-medium leading-tight">{product.name}</p>
+                <p className={`text-xs ${paused || count === 0 ? "text-pink" : "text-muted-foreground"}`}>
+                  {paused ? `Sold out (paused) · ${count} ${unit}` : count === 0 ? "Sold out · 0 left" : `${count} ${unit}`}
+                  {product.edition && product.price <= 0 ? " · set a price in Products to open pre-orders" : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <input type="number" min={0} inputMode="numeric" className="field w-16 !py-1 text-center text-sm" aria-label={`How many of ${product.name}`}
+                  value={draft} onChange={(e) => setDrafts((prev) => ({ ...prev, [product.slug]: e.target.value }))} />
+                <button type="button" className={pill(changed)} disabled={!changed || busy === product.slug} onClick={async () => {
+                  await save(product.slug, { stock: Math.max(0, Math.floor(Number(draft) || 0)) });
+                  setDrafts((prev) => { const next = { ...prev }; delete next[product.slug]; return next; });
+                }}>Save</button>
+                <button type="button" className={pill(false)} disabled={busy === product.slug} onClick={() => save(product.slug, { soldOut: !paused })}>
+                  {paused ? "Put back" : "Sold out"}
+                </button>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
 }
 
 function OrdersTab({ orders, setOrders, setError }: { orders: SavedOrder[] | null; setOrders: (rows: SavedOrder[] | null) => void; setError: (message: string | null) => void }) {
-  const [filter, setFilter] = useState<"all" | "pending" | "paid" | "shipped">("all");
+  const [filter, setFilter] = useState<"all" | "pending" | "paid" | "shipped" | "cancelled" | "mail club">("all");
   const [busy, setBusy] = useState("");
-  const { refresh } = useInventory();
-  const visible = (orders ?? []).filter((order) => filter === "all" || stage(order) === filter);
+  const visible = (orders ?? []).filter((order) => filter === "all" || (filter === "mail club" ? isMailClub(order) : stage(order) === filter));
   async function run(id: string, work: () => Promise<void>, patch: Partial<SavedOrder>) {
     setBusy(id);
     setError(null);
@@ -176,7 +200,7 @@ function OrdersTab({ orders, setOrders, setError }: { orders: SavedOrder[] | nul
     <section className="mt-4">
       <h2 className={h2}>Orders</h2>
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {(["all", "pending", "paid", "shipped"] as const).map((id) => (
+        {(["all", "pending", "paid", "shipped", "cancelled", "mail club"] as const).map((id) => (
           <button key={id} type="button" className={pill(filter === id)} onClick={() => setFilter(id)}>{id.toUpperCase()}</button>
         ))}
       </div>
@@ -187,6 +211,8 @@ function OrdersTab({ orders, setOrders, setError }: { orders: SavedOrder[] | nul
             <div className="flex flex-wrap gap-1.5">
               <span className="rounded-full bg-pink/15 px-2 py-0.5 text-xs">{order.orderId}</span>
               <span className="rounded-full border px-2 py-0.5 text-xs capitalize">{stage(order)}</span>
+              {isMailClub(order) ? <span className="rounded-full bg-foreground px-2 py-0.5 text-xs text-background">Mail Club</span> : null}
+              {order.status === "order_confirmed" ? <span className="rounded-full border px-2 py-0.5 text-xs">{orderStatusLabel(order.status)}</span> : null}
             </div>
             <p className="mt-1 text-xs leading-snug text-muted-foreground">{when(order.createdAt)}</p>
             <div className="mt-2 rounded-lg bg-paper px-3 py-2 text-xs leading-snug">
@@ -204,9 +230,12 @@ function OrdersTab({ orders, setOrders, setError }: { orders: SavedOrder[] | nul
               <p className="mt-1 flex justify-between border-t pt-1 font-medium"><span>Total</span><span className="tabular-nums">{formatPrice(order.total)}</span></p>
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
+              {stage(order) === "cancelled" ? null : <>
               {stage(order) === "pending" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, () => markPaid(order.orderId), { paymentStatus: "paid" })}>Mark paid</button> : null}
               {order.fulfillment !== "shipped" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, () => markShipped(order.orderId), { fulfillment: "shipped" })}>Mark shipped</button> : null}
-              {order.status !== "order_confirmed" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, async () => { await confirmOrder(order.orderId); await refresh(); }, { status: "order_confirmed" })}>Confirm stock</button> : null}
+              {order.status !== "order_confirmed" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, async () => { await confirmOrder(order.orderId); installListings(await listListings()); }, { status: "order_confirmed" })}>Confirm stock</button> : null}
+              {stage(order) === "pending" && order.status === "order_placed" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, () => cancelOrder(order.orderId), { status: "order_cancelled" })}>Cancel unpaid order</button> : null}
+              </>}
             </div>
           </article>
         ))}
@@ -218,13 +247,13 @@ function OrdersTab({ orders, setOrders, setError }: { orders: SavedOrder[] | nul
 function ProductsTab({ ready, setError }: { ready: boolean; setError: (message: string | null) => void }) {
   const products = liveProducts().filter((product) => product.status !== "retired");
   const listings = catalogState().listings;
-  const [drafts, setDrafts] = useState<Record<string, { mrp: string; price: string; cost: string }>>({});
+  const [drafts, setDrafts] = useState<Record<string, { mrp: string; price: string; cost: string; stock: string }>>({});
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    const next: Record<string, { mrp: string; price: string; cost: string }> = {};
+    const next: Record<string, { mrp: string; price: string; cost: string; stock: string }> = {};
     for (const product of liveProducts()) {
       const row = listings[product.slug];
-      next[product.slug] = { mrp: String(row?.mrp ?? 0), price: String(product.price), cost: String(row?.cost ?? 0) };
+      next[product.slug] = { mrp: String(row?.mrp ?? 0), price: String(product.price), cost: String(row?.cost ?? 0), stock: String(row?.stock ?? 0) };
     }
     setDrafts(next);
   }, [listings, ready]);
@@ -248,10 +277,10 @@ function ProductsTab({ ready, setError }: { ready: boolean; setError: (message: 
           }
         }}>{busy ? "Saving…" : "Save prices"}</button>
       </div>
-      <p className={note}>Crossed price, selling price, and private cost. Leave crossed at 0 for no strikethrough.</p>
+      <p className={note}>Crossed price, selling price, and private cost. Leave crossed at 0 for no strikethrough. How many you have is set in the Stock tab. The Mail Club opens for pre-order once it has a price here and copies there.</p>
       <ul className="mt-2 divide-y rounded-xl border">
         {products.map((product) => {
-          const row = drafts[product.slug] ?? { mrp: "0", price: String(product.price), cost: "0" };
+          const row = drafts[product.slug] ?? { mrp: "0", price: String(product.price), cost: "0", stock: "0" };
           const profit = (Number(row.price) || 0) - (Number(row.cost) || 0);
           const labels = { mrp: "Crossed", price: "Selling", cost: "Cost" } as const;
           return (
@@ -276,7 +305,6 @@ function ProductsTab({ ready, setError }: { ready: boolean; setError: (message: 
 }
 
 function AddPiece({ setError }: { setError: (message: string | null) => void }) {
-  const { save } = useInventory();
   const [image, setImage] = useState("");
   const [soldOut, setSoldOut] = useState(false);
   const [tiers, setTiers] = useState<number[]>([]);
@@ -303,7 +331,6 @@ function AddPiece({ setError }: { setError: (message: string | null) => void }) 
     setError(null);
     try {
       await saveListing(row);
-      await save(slug, stock);
       e.currentTarget.reset();
       setImage("");
       setSoldOut(false);
@@ -349,7 +376,7 @@ function AddPiece({ setError }: { setError: (message: string | null) => void }) 
       {image ? <p className="text-xs text-muted-foreground">Photo attached.</p> : null}
       <input name="image" className="field !py-1 text-sm" placeholder="or paste an image path / URL" />
       <div className="grid gap-2 sm:grid-cols-2">
-        <select name="category" className="field !py-1 text-sm" aria-label="Category">{Object.entries(CATEGORY_LABEL).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select>
+        <select name="category" className="field !py-1 text-sm" aria-label="Category">{Object.entries(CATEGORY_LABEL).filter(([id]) => id !== "mail-club").map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select>
         <select name="collection" className="field !py-1 text-sm" aria-label="Collection"><option value="">Collection</option>{COLLECTIONS.map((item) => <option key={item}>{item}</option>)}</select>
       </div>
       <input name="variants" className="field !py-1 text-sm" placeholder="Variants, comma separated (e.g. S, M, L)" />
@@ -360,10 +387,9 @@ function AddPiece({ setError }: { setError: (message: string | null) => void }) 
 
 function HampersTab({ setError }: { setError: (message: string | null) => void }) {
   useCatalog();
-  const { apply } = useInventory();
   const [query, setQuery] = useState("");
   const listings = catalogState().listings;
-  const products = liveProducts().filter((product) => product.status !== "retired" && product.name.toLowerCase().includes(query.trim().toLowerCase())).map(apply);
+  const products = liveProducts().filter((product) => product.status !== "retired" && product.name.toLowerCase().includes(query.trim().toLowerCase()));
   return (
     <section className="mt-4">
       <h2 className={h2}>Hampers</h2>

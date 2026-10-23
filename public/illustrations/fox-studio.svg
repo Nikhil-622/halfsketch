@@ -1,0 +1,252 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1600 1000" role="img" aria-label="A fox in a beret, striped sweater and scarf painting a sunset bookmark by a window">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FCEBD2"/>
+      <stop offset="0.55" stop-color="#F9D3A8"/>
+      <stop offset="1" stop-color="#F3A98E"/>
+    </linearGradient>
+    <linearGradient id="sunset" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F7C04A"/>
+      <stop offset="0.5" stop-color="#F08A3C"/>
+      <stop offset="1" stop-color="#DE4F45"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.45" r="0.5">
+      <stop offset="0" stop-color="#FFF6E6" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFF6E6" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- watercolour bleed for fills, pencil wobble for lines -->
+    <filter id="wash" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" seed="4"/>
+      <feDisplacementMap in="SourceGraphic" scale="8"/>
+    </filter>
+    <filter id="pencil" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="9"/>
+      <feDisplacementMap in="SourceGraphic" scale="3.5"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="2" stitchTiles="stitch"/>
+      <feColorMatrix values="0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.22  0 0 0 0.12 0"/>
+    </filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+
+    <!-- shapes shared by the wash and the pencil pass -->
+    <rect id="frame" x="540" y="130" width="540" height="720"/>
+    <rect id="glass" x="570" y="160" width="480" height="660"/>
+    <path id="muntins" d="M802,160 H818 V480 H1050 V496 H818 V820 H802 V496 H570 V480 H802 Z"/>
+    <rect id="sill" x="515" y="842" width="590" height="26"/>
+    <path id="curtainL" d="M448,118 L648,118 Q612,310 656,520 Q694,720 604,884 L448,884 Q472,500 448,118 Z"/>
+    <path id="curtainR" d="M1172,118 L972,118 Q1008,310 964,520 Q926,720 1016,884 L1172,884 Q1148,500 1172,118 Z"/>
+    <path id="rod" d="M430,104 H1190 V116 H430 Z"/>
+
+    <path id="tail" d="M1436,866 Q1588,838 1566,682 Q1552,588 1478,606 Q1466,642 1498,684 Q1522,768 1436,806 Z"/>
+    <path id="tailTip" d="M1478,606 Q1552,588 1566,682 Q1534,652 1504,664 Q1480,642 1478,606 Z"/>
+    <path id="body" d="M1214,662 Q1310,628 1406,662 Q1458,708 1468,884 L1152,884 Q1162,708 1214,662 Z"/>
+    <path id="armR" d="M1398,678 Q1448,744 1432,842 L1392,848 Q1398,762 1366,716 Z"/>
+    <path id="armL" d="M1224,678 Q1166,732 1120,802 Q1130,824 1152,828 Q1200,772 1258,726 Z"/>
+    <path id="earL" d="M1238,506 L1226,390 Q1262,420 1294,470 Z"/>
+    <path id="earR" d="M1382,506 L1394,390 Q1358,420 1326,470 Z"/>
+    <path id="earInL" d="M1246,490 L1240,420 Q1262,444 1280,474 Z"/>
+    <path id="earInR" d="M1374,490 L1380,420 Q1358,444 1340,474 Z"/>
+    <path id="head" d="M1222,526 Q1226,462 1310,456 Q1394,462 1398,526 Q1398,576 1352,606 Q1328,622 1310,628 Q1292,622 1268,606 Q1222,576 1222,526 Z"/>
+    <path id="muzzle" d="M1246,558 Q1282,548 1310,586 Q1338,548 1374,558 Q1366,602 1310,628 Q1254,602 1246,558 Z"/>
+    <path id="beret" d="M1250,472 Q1254,434 1312,430 Q1374,432 1378,470 Q1342,484 1310,482 Q1274,482 1250,472 Z"/>
+    <path id="scarf" d="M1244,606 Q1310,662 1376,606 Q1390,624 1386,642 Q1310,694 1234,642 Q1230,624 1244,606 Z"/>
+    <path id="scarfTail" d="M1334,654 L1350,772 L1384,766 L1364,646 Z"/>
+    <ellipse id="pawL" cx="1134" cy="818" rx="21" ry="16"/>
+    <ellipse id="pawR" cx="1412" cy="850" rx="25" ry="14"/>
+
+    <path id="table" d="M820,874 Q1210,852 1600,864 L1600,1000 L806,1000 Z"/>
+    <rect id="bookmark" x="950" y="886" width="220" height="52" transform="rotate(-6 1060 912)"/>
+    <path id="jar" d="M892,792 L966,792 L960,880 Q929,890 898,880 Z"/>
+    <ellipse id="palette" cx="1508" cy="934" rx="72" ry="26"/>
+    <path id="pot" d="M226,862 L374,862 L356,1000 L244,1000 Z"/>
+    <path id="potRim" d="M214,846 H386 V872 H214 Z"/>
+
+    <path id="leaf" d="M0,0 Q34,-64 0,-140 Q-34,-64 0,0 Z"/>
+    <g id="flower">
+      <ellipse cx="0" cy="-18" rx="11" ry="18"/>
+      <ellipse cx="0" cy="-18" rx="11" ry="18" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-18" rx="11" ry="18" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-18" rx="11" ry="18" transform="rotate(216)"/>
+      <ellipse cx="0" cy="-18" rx="11" ry="18" transform="rotate(288)"/>
+    </g>
+
+    <clipPath id="glassClip"><use href="#glass"/></clipPath>
+    <clipPath id="bodyClip"><use href="#body"/></clipPath>
+    <clipPath id="aboveTable"><path d="M0,0 H1600 V864 Q1210,852 820,874 V1000 H0 Z"/></clipPath>
+    <clipPath id="bookmarkClip"><use href="#bookmark"/></clipPath>
+  </defs>
+
+  <!-- wall -->
+  <rect width="1600" height="1000" fill="#F1ECE5"/>
+  <g filter="url(#soft)" opacity="0.7">
+    <ellipse cx="220" cy="300" rx="260" ry="200" fill="#EDDCCC"/>
+    <ellipse cx="1420" cy="260" rx="240" ry="220" fill="#F3DDD6"/>
+    <ellipse cx="810" cy="480" rx="520" ry="420" fill="url(#glow)"/>
+    <ellipse cx="300" cy="760" rx="300" ry="160" fill="#EADFCF"/>
+  </g>
+
+  <!-- ===== watercolour wash ===== -->
+  <g filter="url(#wash)">
+    <!-- window -->
+    <use href="#frame" fill="#FBF6EE"/>
+    <use href="#glass" fill="url(#sky)"/>
+    <g clip-path="url(#glassClip)">
+      <circle cx="900" cy="650" r="54" fill="#FCE6B4"/>
+      <path d="M570,708 Q700,642 822,694 Q944,630 1050,684 V820 H570 Z" fill="#B9C595"/>
+      <path d="M570,758 Q760,706 1050,766 V820 H570 Z" fill="#8FA472"/>
+    </g>
+    <use href="#muntins" fill="#FBF6EE"/>
+    <use href="#sill" fill="#FBF6EE"/>
+
+    <!-- curtains -->
+    <use href="#curtainL" fill="#F184A2" fill-opacity="0.42"/>
+    <use href="#curtainR" fill="#F184A2" fill-opacity="0.42"/>
+    <use href="#rod" fill="#D6A04A"/>
+    <circle cx="430" cy="110" r="17" fill="#D6A04A"/>
+    <circle cx="1190" cy="110" r="17" fill="#D6A04A"/>
+
+    <!-- plant -->
+    <g transform="translate(300 856)" fill="#6E8B4E">
+      <use href="#leaf" transform="rotate(-58) scale(1.1)"/>
+      <use href="#leaf" transform="rotate(-30) scale(1.35)"/>
+      <use href="#leaf" transform="rotate(-6) scale(1.6)" fill="#86A060"/>
+      <use href="#leaf" transform="rotate(20) scale(1.4)"/>
+      <use href="#leaf" transform="rotate(48) scale(1.15)" fill="#86A060"/>
+      <use href="#leaf" transform="rotate(-80) scale(0.85)" fill="#86A060"/>
+      <use href="#leaf" transform="rotate(76) scale(0.9)"/>
+    </g>
+    <g fill="#F184A2">
+      <use href="#flower" transform="translate(208 700)"/>
+      <use href="#flower" transform="translate(300 630) scale(1.15)"/>
+      <use href="#flower" transform="translate(392 712)"/>
+      <use href="#flower" transform="translate(150 790) scale(0.8)" fill="#F4A6BB"/>
+      <use href="#flower" transform="translate(450 790) scale(0.8)" fill="#F4A6BB"/>
+    </g>
+    <g fill="#F7C04A">
+      <circle cx="208" cy="700" r="8"/><circle cx="300" cy="630" r="9"/><circle cx="392" cy="712" r="8"/>
+      <circle cx="150" cy="790" r="6"/><circle cx="450" cy="790" r="6"/>
+    </g>
+    <use href="#potRim" fill="#B9653F"/>
+    <use href="#pot" fill="#C8754E"/>
+
+    <!-- fox -->
+    <use href="#tail" fill="#D8743A"/>
+    <use href="#tailTip" fill="#FBF3E6"/>
+    <use href="#body" fill="#F7EFE3"/>
+    <g clip-path="url(#bodyClip)" fill="#F184A2" fill-opacity="0.85">
+      <rect x="1140" y="716" width="340" height="20"/>
+      <rect x="1140" y="772" width="340" height="20"/>
+      <rect x="1140" y="828" width="340" height="20"/>
+    </g>
+    <use href="#armR" fill="#F7EFE3"/>
+    <use href="#armL" fill="#F7EFE3"/>
+    <use href="#earL" fill="#D8743A"/>
+    <use href="#earR" fill="#D8743A"/>
+    <use href="#earInL" fill="#3A2C26"/>
+    <use href="#earInR" fill="#3A2C26"/>
+    <use href="#head" fill="#D8743A"/>
+    <use href="#muzzle" fill="#FBF3E6"/>
+    <circle cx="1258" cy="578" r="13" fill="#F184A2" fill-opacity="0.5"/>
+    <circle cx="1362" cy="578" r="13" fill="#F184A2" fill-opacity="0.5"/>
+    <use href="#beret" fill="#2E2826"/>
+    <use href="#scarf" fill="#D9A441"/>
+    <use href="#scarfTail" fill="#D9A441"/>
+
+    <!-- table and things on it -->
+    <use href="#table" fill="#FBF6EE"/>
+    <use href="#pawL" fill="#4A3428"/>
+    <use href="#pawR" fill="#4A3428"/>
+    <use href="#bookmark" fill="url(#sunset)"/>
+    <use href="#jar" fill="#BFD6DE" fill-opacity="0.55"/>
+    <path d="M898,840 L962,840 L960,880 Q929,890 898,880 Z" fill="#9EC0CC" fill-opacity="0.5"/>
+    <use href="#palette" fill="#F6EEDF"/>
+    <g>
+      <circle cx="1470" cy="928" r="10" fill="#F184A2"/>
+      <circle cx="1500" cy="918" r="9" fill="#F7C04A"/>
+      <circle cx="1532" cy="924" r="10" fill="#6E8B4E"/>
+      <circle cx="1546" cy="944" r="8" fill="#4F79A8"/>
+      <circle cx="1488" cy="946" r="8" fill="#DE4F45"/>
+    </g>
+  </g>
+
+  <!-- ===== pencil pass, slightly off-register so it reads as a half sketch ===== -->
+  <g filter="url(#pencil)" transform="translate(4 -3)" fill="none" stroke="#2A2421" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <use href="#frame"/>
+    <use href="#glass"/>
+    <use href="#muntins" stroke-width="1.8"/>
+    <use href="#sill"/>
+    <use href="#rod"/>
+    <circle cx="430" cy="110" r="17"/>
+    <circle cx="1190" cy="110" r="17"/>
+    <g stroke-width="2">
+      <circle cx="520" cy="114" r="11"/><circle cx="590" cy="114" r="11"/><circle cx="640" cy="114" r="11"/>
+      <circle cx="980" cy="114" r="11"/><circle cx="1040" cy="114" r="11"/><circle cx="1110" cy="114" r="11"/>
+    </g>
+    <use href="#curtainL" stroke="#C9577A" stroke-width="2"/>
+    <use href="#curtainR" stroke="#C9577A" stroke-width="2"/>
+    <g stroke="#C9577A" stroke-width="1.6" opacity="0.8">
+      <path d="M500,130 Q520,500 490,870"/><path d="M560,130 Q590,480 552,870"/><path d="M610,140 Q630,420 640,600"/>
+      <path d="M1120,130 Q1100,500 1130,870"/><path d="M1060,130 Q1030,480 1068,870"/><path d="M1010,140 Q990,420 980,600"/>
+    </g>
+    <!-- birds outside -->
+    <path d="M940,256 q10,-10 20,0 q10,-10 20,0" stroke-width="2"/>
+    <path d="M992,290 q7,-7 14,0 q7,-7 14,0" stroke-width="1.8"/>
+
+    <g transform="translate(300 856)" stroke="#3E5230" stroke-width="2">
+      <use href="#leaf" transform="rotate(-30) scale(1.35)"/>
+      <use href="#leaf" transform="rotate(-6) scale(1.6)"/>
+      <use href="#leaf" transform="rotate(20) scale(1.4)"/>
+      <path d="M0,0 L0,-200"/>
+    </g>
+    <use href="#potRim"/>
+    <use href="#pot"/>
+
+    <g clip-path="url(#aboveTable)">
+      <use href="#tail"/>
+      <use href="#body"/>
+      <use href="#armR"/>
+      <use href="#armL"/>
+    </g>
+    <use href="#earL"/>
+    <use href="#earR"/>
+    <use href="#head"/>
+    <use href="#muzzle" stroke-width="1.8"/>
+    <use href="#beret"/>
+    <path d="M1312,430 Q1314,416 1326,412" stroke-width="4"/>
+    <use href="#scarf"/>
+    <use href="#scarfTail"/>
+    <path d="M1352,772 l-2,16 M1362,770 l0,16 M1372,768 l2,16 M1382,766 l3,16" stroke-width="2"/>
+    <!-- face: eyes closed, looking down at the work -->
+    <path d="M1264,546 Q1276,558 1290,546" stroke-width="3.2"/>
+    <path d="M1330,546 Q1344,558 1356,546" stroke-width="3.2"/>
+    <ellipse cx="1310" cy="612" rx="10" ry="7.5" fill="#2A2421"/>
+    <path d="M1310,620 Q1302,632 1294,628 M1310,620 Q1318,632 1326,628" stroke-width="2"/>
+    <path d="M1236,596 l-34,-6 M1238,606 l-32,6 M1384,596 l34,-6 M1382,606 l32,6" stroke-width="1.4"/>
+
+    <use href="#table"/>
+    <path d="M840,888 Q1210,866 1600,878" stroke-width="1.4" stroke-dasharray="2 9"/>
+    <use href="#pawL"/>
+    <use href="#pawR"/>
+    <use href="#bookmark"/>
+    <use href="#jar"/>
+    <use href="#palette"/>
+    <path d="M1444,938 q16,-14 30,-4" stroke-width="2"/>
+  </g>
+
+  <!-- brush in the fox's paw, and a tiny painting on the bookmark -->
+  <g filter="url(#pencil)" stroke-linecap="round">
+    <path d="M1170,770 L1104,850" stroke="#8B5A3C" stroke-width="7"/>
+    <path d="M1108,845 L1096,860" stroke="#B8B0A4" stroke-width="7"/>
+    <path d="M1096,860 L1086,874" stroke="#2A2421" stroke-width="5"/>
+    <path d="M916,790 L896,712 M932,790 L938,700 M948,790 L978,720" stroke="#8B5A3C" stroke-width="5"/>
+    <path d="M896,712 l-3,-12 M938,700 l1,-13 M978,720 l5,-11" stroke="#F184A2" stroke-width="6"/>
+    <g clip-path="url(#bookmarkClip)" fill="none" stroke="#2A2421" stroke-width="1.6">
+      <path d="M948,905 Q1060,920 1172,892"/>
+      <path d="M1010,909 q4,-6 8,0 q4,-6 8,0 M1060,912 q4,-6 8,0 q4,-6 8,0 M1112,905 q4,-6 8,0 q4,-6 8,0"/>
+    </g>
+  </g>
+
+  <rect width="1600" height="1000" filter="url(#grain)"/>
+</svg>

@@ -1,12 +1,14 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
-import { useInventory } from "@/lib/inventory";
 import { CATEGORY_LABEL, STATUS_LABEL, formatPrice, getProduct } from "@/lib/products";
 import { addReview, listReviews, useCatalog, type Review } from "@/lib/studio";
 
 export const Route = createFileRoute("/shop_/$slug")({
-  loader: ({ params }) => ({ slug: params.slug, product: getProduct(params.slug) ?? null }),
+  loader: ({ params }) => {
+    if (getProduct(params.slug)?.edition) throw redirect({ to: "/mail-club" });
+    return { slug: params.slug, product: getProduct(params.slug) ?? null };
+  },
   head: ({ loaderData }) => {
     if (!loaderData?.product) return { meta: [{ title: "Piece — Halfस्केच" }, { name: "robots", content: "noindex" }] };
     const p = loaderData.product;
@@ -32,7 +34,6 @@ export const Route = createFileRoute("/shop_/$slug")({
 function ProductPage() {
   const { slug, product: loaded } = Route.useLoaderData();
   const { ready } = useCatalog();
-  const { apply } = useInventory();
   const { add, items } = useCart();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
@@ -51,7 +52,7 @@ function ProductPage() {
       </div>
     );
   }
-  const p = apply(found);
+  const p = found;
   const soldOut = p.status === "sold-out" || (!p.available && p.status !== "retired" && p.status !== "coming-soon");
 
   return (
@@ -59,7 +60,7 @@ function ProductPage() {
       <Link to="/shop" className="eyebrow link-sketch text-muted-foreground">← Shop</Link>
       <div className="mt-3 grid gap-8 md:mt-6 md:grid-cols-12 md:gap-12">
         <div className="relative md:col-span-7">
-          <img src={p.images[0]} alt={p.name} className="aspect-[4/5] w-full bg-paper object-contain p-4 md:p-8" />
+          <img src={p.images[0]} alt={p.name} className="aspect-square w-full border border-foreground/15 bg-paper object-contain p-3 md:aspect-[4/5] md:p-8" />
           {soldOut ? (
             <span className="absolute left-1 top-1 bg-foreground px-1 py-px text-[0.5rem] font-medium uppercase leading-none tracking-[0.06em] text-background">Sold out</span>
           ) : null}
@@ -68,7 +69,7 @@ function ProductPage() {
           <p className="eyebrow text-muted-foreground">
             {CATEGORY_LABEL[p.category]}{p.collection ? ` · ${p.collection}` : ""}{p.sketchNo && ` · Sketch ${p.sketchNo}`}
           </p>
-          <h1 className="mt-1 line-clamp-2 text-xl font-semibold leading-tight tracking-[-0.03em] md:text-4xl">{p.name}</h1>
+          <h1 className="heading mt-1 line-clamp-2">{p.name}</h1>
           {p.status && !soldOut && (
             <p className="mt-2 inline-block bg-foreground px-2 py-1 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-background">{STATUS_LABEL[p.status]}</p>
           )}
@@ -77,23 +78,23 @@ function ProductPage() {
             {formatPrice(p.price)}
           </p>
           {p.variants ? <p className="mt-2 text-sm text-muted-foreground">Variants: {p.variants}</p> : null}
-          <p className="mt-2 text-muted-foreground">{p.description}</p>
+          <p className="type mt-3">{p.description}</p>
 
           {p.available ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <div className="flex items-center border text-xs" role="group" aria-label="Quantity">
-                <button className="px-2.5 py-1" aria-label="Decrease quantity" onClick={() => { setNote(""); setQty(Math.max(1, qty - 1)); }}>−</button>
-                <span className="w-5 text-center tabular-nums" aria-live="polite">{qty}</span>
-                <button className="px-2.5 py-1" aria-label="Increase quantity" onClick={() => qty >= p.stock ? setNote(`Only ${p.stock} available`) : (setNote(""), setQty(qty + 1))}>+</button>
+            <div className="sticky bottom-[calc(var(--tabbar)+env(safe-area-inset-bottom))] z-20 -mx-5 mt-4 flex flex-wrap items-center gap-2 border-t bg-background/95 px-5 py-3 backdrop-blur-sm md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
+              <div className="flex items-center border text-sm" role="group" aria-label="Quantity">
+                <button className="size-11" aria-label="Decrease quantity" onClick={() => { setNote(""); setQty(Math.max(1, qty - 1)); }}>−</button>
+                <span className="w-6 text-center tabular-nums" aria-live="polite">{qty}</span>
+                <button className="size-11" aria-label="Increase quantity" onClick={() => qty >= p.stock ? setNote(`Only ${p.stock} available`) : (setNote(""), setQty(qty + 1))}>+</button>
               </div>
-              <button className="btn-ink whitespace-nowrap !px-3 !py-2 !text-[0.62rem] !tracking-[0.12em]" onClick={() => {
+              <button className="btn-ink flex-1 whitespace-nowrap !px-4 !py-3 md:flex-none" onClick={() => {
                 const held = items.find((i) => i.slug === p.slug)?.quantity ?? 0;
                 if (held + qty > p.stock) { setNote(`Only ${p.stock} available`); return; }
                 add(p.slug, qty); setAdded(true); setNote("");
               }}>Add to cart</button>
               {note ? <p className="w-full text-[0.62rem] text-pink" role="status">{note}</p> : null}
               {added && (
-                <button className="btn-line whitespace-nowrap !py-1 !text-[0.62rem] !tracking-[0.12em]" onClick={() => navigate({ to: "/cart" })}>Added — view cart →</button>
+                <button className="btn-line whitespace-nowrap !py-1" onClick={() => navigate({ to: "/cart" })}>Added — view cart →</button>
               )}
             </div>
           ) : (
@@ -103,23 +104,23 @@ function ProductPage() {
           <section className="mt-16 border-t pt-8">
             <h2 className="eyebrow">The story</h2>
             {p.story.split(/\n\n+/).map((para) => (
-              <p key={para} className="mt-4 leading-relaxed">{para}</p>
+              <p key={para} className="type mt-4">{para}</p>
             ))}
           </section>
           {p.feeling && (
             <section className="mt-10 border-t pt-8">
               <h2 className="eyebrow">The feeling</h2>
-              <p className="font-hand mt-4 text-2xl text-pink">{p.feeling}</p>
+              <p className="accent mt-4">{p.feeling}</p>
             </section>
           )}
-          <section className="mt-10 border-t pt-8">
+          {p.details.length ? <section className="mt-10 border-t pt-8">
             <h2 className="eyebrow">The details</h2>
             <dl className="mt-4 divide-y text-sm">
               {p.details.map((d) => (
                 <div key={d.label} className="flex justify-between gap-4 py-3"><dt className="text-muted-foreground">{d.label}</dt><dd className="text-right">{d.value}</dd></div>
               ))}
             </dl>
-          </section>
+          </section> : null}
           <section className="mt-10 border-t pt-8">
             <h2 className="eyebrow">Reviews</h2>
             {reviews.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">No reviews yet.</p> : reviews.map((review) => (
@@ -148,8 +149,8 @@ function ProductPage() {
             </form>
           </section>
           <section className="mt-10 bg-paper p-6">
-            <h2 className="font-hand text-2xl text-pink">a little note</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Every piece is painted by hand, so yours may differ slightly from the photos — a softer wash, a different stroke. That's the handmade part, not a flaw.</p>
+            <h2 className="accent">a little note</h2>
+            <p className="type mt-2">Every piece is painted by hand, so yours may differ slightly from the photos — a softer wash, a different stroke. That's the handmade part, not a flaw.</p>
           </section>
         </div>
       </div>

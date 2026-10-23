@@ -34,14 +34,14 @@ function profileValue(profile: UserProfile | null, name: keyof Customer) {
   return values[name];
 }
 
-const fields: { name: keyof Customer; label: string; type?: string; auto: string; full?: boolean }[] = [
+const fields: { name: keyof Customer; label: string; type?: string; auto: string; full?: boolean; numeric?: boolean }[] = [
   { name: "customerName", label: "Full name", auto: "name", full: true },
   { name: "email", label: "Email", type: "email", auto: "email" },
   { name: "phone", label: "Phone number", type: "tel", auto: "tel" },
   { name: "address", label: "Address", auto: "street-address", full: true },
   { name: "city", label: "City", auto: "address-level2" },
   { name: "state", label: "State", auto: "address-level1" },
-  { name: "postalCode", label: "Postal code", auto: "postal-code" },
+  { name: "postalCode", label: "Postal code", auto: "postal-code", numeric: true },
 ];
 
 function Checkout() {
@@ -88,22 +88,22 @@ function Checkout() {
   }
 
   return (
-    <div className="mx-auto max-w-[1100px] px-5 pt-12 md:px-10">
+    <div className="mx-auto max-w-[1100px] px-5 pt-6 md:px-10 md:pt-12">
       <h1 className="display">Checkout</h1>
-      <div className="mt-12 grid gap-16 md:grid-cols-[1.5fr_1fr]">
-        <form key={user?.uid ?? "guest"} onSubmit={onSubmit} className="grid grid-cols-2 gap-x-6 gap-y-8">
+      <div className="mt-6 grid gap-10 md:mt-12 md:grid-cols-[1.5fr_1fr] md:gap-16">
+        <form key={user?.uid ?? "guest"} onSubmit={onSubmit} className="grid grid-cols-2 gap-x-6 gap-y-6 md:gap-y-8">
           {fields.map((f) => (
             <label key={f.name} className={f.full ? "col-span-2" : "col-span-2 sm:col-span-1"}>
               <span className="eyebrow text-muted-foreground">{f.label}</span>
-              <input name={f.name} type={f.type ?? "text"} autoComplete={f.auto} required className="field" defaultValue={profileValue(profile, f.name)} />
+              <input name={f.name} type={f.type ?? "text"} autoComplete={f.auto} inputMode={f.numeric ? "numeric" : undefined} required className="field" defaultValue={profileValue(profile, f.name)} />
             </label>
           ))}
-          <div className="col-span-2 bg-paper p-5 text-sm text-muted-foreground">
+          <div className="type col-span-2 bg-paper p-5">
             <p><span className="font-medium text-foreground">Next:</span> a Google Pay code for {shipping === 0 ? "your pieces, with shipping removed." : `your pieces plus ₹${shipping} shipping.`} The order is placed after you pay.</p>
           </div>
           <button type="submit" className="btn-ink col-span-2 justify-center">Proceed to payment</button>
         </form>
-        <aside className="h-fit border-t pt-6">
+        <aside className="order-first h-fit border-t pt-6 md:order-none">
           <h2 className="eyebrow">Your order</h2>
           <ul className="mt-6 space-y-4">
             {items.map(({ product: p, quantity }) => (

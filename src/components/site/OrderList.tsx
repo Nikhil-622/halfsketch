@@ -17,7 +17,7 @@ export function OrderList({
   confirmingId?: string | null;
 }) {
   if (orders.length === 0) {
-    return <p className="mt-10 text-muted-foreground">No orders yet.</p>;
+    return <p className="type mt-10">No orders yet.</p>;
   }
   return (
     <ul className="mt-10 divide-y border-y">
@@ -25,9 +25,9 @@ export function OrderList({
         const confirmed = order.status === "order_confirmed";
         const c = order.customer;
         return (
-          <li key={order.orderId} className="grid gap-8 py-10 md:grid-cols-12">
+          <li key={order.orderId} className="grid gap-6 py-6 md:grid-cols-12 md:gap-8 md:py-10">
             <div className="md:col-span-4">
-              <p className="font-hand text-2xl text-pink">{orderStatusLabel(order.status)}</p>
+              <p className="accent">{orderStatusLabel(order.status)}</p>
               <p className="eyebrow mt-3">{order.orderId}</p>
               <p className="mt-2 text-sm text-muted-foreground">{when(order.createdAt)}</p>
               {onConfirm && !confirmed ? (

@@ -61,8 +61,8 @@ function SignInPage() {
 
   return (
     <div className="mx-auto max-w-md px-5 py-6 md:py-16">
-      <h1 className="text-2xl font-semibold tracking-[-0.03em]">{mode === "in" ? "Sign in" : "Create an account"}</h1>
-      <p className="mt-4 text-muted-foreground">Use your email, or continue with Google. Your name, address and cart stay with your account.</p>
+      <h1 className="heading">{mode === "in" ? "Sign in" : "Create an account"}</h1>
+      <p className="type mt-4">Use your email, or continue with Google. Your name, address and cart stay with your account.</p>
       {!configured ? (
         <p className="mt-8 bg-paper p-5 text-sm">Sign-in is not configured yet. Add the Firebase values to the env file and restart the site.</p>
       ) : (

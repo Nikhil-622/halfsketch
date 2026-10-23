@@ -5,7 +5,6 @@ import QRCode from "qrcode";
 import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
-import { listInventory, withStock } from "@/lib/inventory";
 import { saveOrder } from "@/lib/orders-db";
 import { formatPrice, getProduct } from "@/lib/products";
 import {
@@ -116,10 +115,8 @@ function PaymentPage() {
       sessionStorage.setItem(PLACE_LOCK, cartKey);
       placing = (async () => {
         try {
-          const counts = await listInventory();
           for (const item of snapshot) {
-            const catalog = getProduct(item.slug);
-            const product = catalog ? withStock(catalog, counts) : null;
+            const product = getProduct(item.slug);
             if (!product?.available || item.quantity > product.stock) {
               throw new Error(product ? `Only ${product.stock} of "${product.name}" left.` : "One of the pieces in your cart is no longer available.");
             }
@@ -190,37 +187,38 @@ function PaymentPage() {
   return (
     <div className="mx-auto flex max-w-md flex-col items-center px-5 pt-12 text-center md:pt-16">
       <Logo className="h-12" />
-      <h1 className="mt-8 text-4xl font-semibold tracking-tight">Order {order.orderId} placed</h1>
-      <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f6e7c1] px-4 py-1.5 text-sm text-[#8a5a12]">
+      <h1 className="heading mt-6">Order placed</h1>
+      <p className="eyebrow mt-3">Order <span className="text-pink">{order.orderId}</span></p>
+      <p className="mt-4 inline-flex items-center gap-2 border border-foreground/30 bg-paper px-4 py-2 text-[0.62rem] uppercase tracking-[0.14em]">
         <Clock className="size-4" aria-hidden="true" />
         Waiting for payment confirmation from store
       </p>
-      <p className="mt-5 text-muted-foreground">
+      <p className="type mt-5">
         Please complete the payment below. The studio will confirm your payment and ship your order once it is received.
       </p>
-      <div className="mt-8 w-full max-w-[280px] rounded-2xl bg-paper px-6 pb-5 pt-6">
+      <div className="mt-8 w-full max-w-[280px] border border-foreground/20 bg-paper px-6 pb-5 pt-6 max-md:order-1">
         {qr ? (
           <img src={qr} alt={`UPI code for ${formatPrice(order.total)}`} className="mx-auto h-56 w-56" />
         ) : (
           <div className="mx-auto grid h-56 w-56 place-items-center text-sm text-muted-foreground">Preparing the code…</div>
         )}
-        <p className="mt-3 text-sm text-muted-foreground">Scan with any UPI app</p>
+        <p className="mt-3 text-sm text-muted-foreground"><span className="md:hidden">Paying from another phone? </span>Scan with any UPI app</p>
       </div>
-      <p className="mt-6 text-xl font-semibold">Pay {formatPrice(order.total)}</p>
-      <a href={payLink} className="btn-ink mt-6 w-full justify-center rounded-full">Pay in UPI app</a>
+      <p className="mt-6 font-mono text-2xl">Pay {formatPrice(order.total)}</p>
+      <a href={payLink} className="btn-ink mt-6 w-full">Pay in UPI app</a>
       <a
         href={whatsappHref(order)}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-[#22c55e] px-6 py-4 text-[0.72rem] font-medium uppercase tracking-[0.2em] text-white"
+        className="btn-ink mt-3 w-full border-[#22c55e] text-[#15803d] hover:border-[#22c55e] hover:bg-[#22c55e] hover:text-white"
       >
         Send order details on WhatsApp
       </a>
-      <div className="mt-6 w-full rounded-2xl bg-paper px-5 py-5 text-sm text-muted-foreground">
+      <div className="type mt-6 w-full border border-foreground/20 bg-paper px-5 py-5">
         <p>Can’t open a UPI app? Pay manually to:</p>
-        <p className="mt-2 flex items-center justify-center gap-2 text-base font-semibold text-foreground">
+        <p className="mt-2 flex flex-wrap items-center justify-center gap-2 text-base text-foreground">
           {UPI_ID}
-          <button type="button" className="rounded-full bg-pink/15 px-3 py-1 text-xs font-medium normal-case tracking-normal text-pink" onClick={copyUpi}>
+          <button type="button" className="btn-ink !min-h-0 !px-4 !py-2 !text-[0.6rem]" onClick={copyUpi}>
             {copied ? "Copied" : "Copy"}
           </button>
         </p>

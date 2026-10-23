@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { formatPrice } from "@/lib/products";
-import type { Order } from "@/lib/orders.functions";
+import { isMailClub, type Order } from "@/lib/orders.functions";
 
 export const Route = createFileRoute("/order-confirmation")({
   head: () => ({
@@ -35,13 +35,14 @@ function Confirmation() {
   }
   const c = order.customer;
   return (
-    <div className="mx-auto max-w-[900px] px-5 pt-16 md:px-10">
-      <p className="font-hand text-3xl text-pink">thank you, {c.customerName.split(" ")[0]} ♡</p>
+    <div className="mx-auto max-w-[900px] px-5 pt-8 md:px-10 md:pt-16">
+      <p className="accent">thank you, {c.customerName.split(" ")[0]} ♡</p>
       <h1 className="display mt-4">Order placed</h1>
       <p className="mt-8 eyebrow">Order <span className="text-pink">{order.orderId}</span></p>
-      <p className="mt-4 max-w-lg text-muted-foreground">We've received this order. Once the studio checks your payment, it will show as Order confirmed.</p>
+      <p className="type mt-4 max-w-lg">We've received this order. Once the studio checks your payment, it will show as Order confirmed.</p>
+      {isMailClub(order) ? <p className="accent mt-3">your November Mail Club parcel is on our desk — we'll post it once it's packed ✉</p> : null}
 
-      <div className="mt-14 grid gap-12 border-t pt-10 md:grid-cols-2">
+      <div className="mt-8 grid gap-8 border-t pt-8 md:mt-14 md:grid-cols-2 md:gap-12 md:pt-10">
         <section>
           <h2 className="eyebrow">Summary</h2>
           <ul className="mt-4 space-y-2 text-sm">
