@@ -53,7 +53,7 @@ function MailClub() {
       <section className="relative isolate overflow-hidden border-b border-foreground/20">
         <div aria-hidden className="absolute inset-0 -z-10 bg-paper" />
         <div className={`${wrap} grid items-center gap-8 py-8 md:grid-cols-2 md:gap-14 md:py-20`}>
-          <img src={MAIL_CLUB.cover} alt="A kraft envelope sealed with pink wax among autumn leaves" width={1000} height={1000}
+          <img src={MAIL_CLUB.cover} alt="The November Mail Club: a sleepy cat postcard, an ivy bookmark, a November calendar, three art stamps and a letter" width={1200} height={1200}
             fetchPriority="high" className="mx-auto aspect-square w-full max-w-md border border-foreground/30 bg-background object-cover shadow-[0_10px_30px_-18px_rgb(0_0_0/0.45)]" />
           <div>
             <p className="eyebrow text-muted-foreground">Halfस्केच Mail Club · {MAIL_CLUB.editionLabel}</p>
@@ -125,7 +125,7 @@ function MailClub() {
             {MAIL_CLUB.includes.map((item, i) => (
               <li key={item.name} className="min-w-0">
                 {item.image ? (
-                  <img src={item.image} alt={item.name} loading="lazy" className="aspect-square w-full border border-foreground/15 bg-background object-contain p-2" />
+                  <img src={item.image} alt={item.name} loading="lazy" className="aspect-square w-full border border-foreground/15 bg-background object-cover" />
                 ) : (
                   <div className="grid aspect-square w-full place-items-center border border-dashed border-foreground/30 bg-background p-3 text-center">
                     <div>
@@ -156,11 +156,8 @@ function MailClub() {
         <figure className="relative mx-auto w-full max-w-md rotate-[-1.5deg] border border-foreground/20 bg-[repeating-linear-gradient(transparent,transparent_2.1rem,color-mix(in_oklab,var(--color-foreground)_10%,transparent)_2.1rem,color-mix(in_oklab,var(--color-foreground)_10%,transparent)_calc(2.1rem+1px))] bg-background px-7 py-8 shadow-[0_10px_30px_-18px_rgb(0_0_0/0.45)]">
           <span aria-hidden className="tape -top-3 left-1/3 rotate-3" />
           <p className="font-hand text-3xl">Dear you,</p>
-          {MAIL_CLUB.letter.length ? (
-            MAIL_CLUB.letter.map((para) => <p key={para} className="font-hand mt-3 text-xl leading-[2.1rem]">{para}</p>)
-          ) : (
-            <p className="font-hand mt-3 text-xl leading-[2.1rem] text-muted-foreground">…the rest of this letter is waiting for you inside the parcel.</p>
-          )}
+          {MAIL_CLUB.letter.slice(0, MAIL_CLUB.letterPreview).map((para) => <p key={para} className="type mt-3 leading-[2.1rem]">{para}</p>)}
+          <p className="type mt-3 leading-[2.1rem] text-muted-foreground">…the rest of this letter is waiting for you inside the parcel.</p>
           <p className="font-hand mt-4 text-right text-2xl text-pink">— Halfस्केच</p>
         </figure>
       </section>
