@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, setDoc, updateDoc, type Unsubscribe } from "firebase/firestore";
 import { firebaseDb, firebaseDbAnywhere } from "./firebase";
 import {
   catalogState,
@@ -55,10 +55,28 @@ export async function listListings() {
   return snap.docs.map((item) => asListing(item.id, item.data()));
 }
 
+/** Live listings so Stock counts move as soon as Confirm stock / Mark paid writes Firestore. */
+export function watchListings(onError?: (error: Error) => void): Unsubscribe | null {
+  const db = store();
+  if (!db) {
+    installListings([]);
+    return null;
+  }
+  return onSnapshot(
+    collection(db, "listings"),
+    (snap) => installListings(snap.docs.map((item) => asListing(item.id, item.data()))),
+    (error) => {
+      installListings([]);
+      onError?.(error instanceof Error ? error : new Error("We couldn't load stock."));
+    },
+  );
+}
+
 export async function saveListing(row: Listing) {
   const db = store();
   if (!db) throw new Error("Firebase is not configured.");
   await setDoc(doc(db, "listings", row.slug), { ...row, slug: row.slug }, { merge: true });
+  // Snapshot watcher (when mounted) refreshes the catalogue; this covers one-shot callers too.
   installListings(await listListings());
 }
 
@@ -86,14 +104,16 @@ export async function serverProduct(slug: string): Promise<Product | undefined> 
   return base ? overlay(base, row) : undefined;
 }
 
-let loading: Promise<void> | null = null;
+let listingsWatchStarted = false;
 
 export function useCatalog() {
   const [, setTick] = useState(0);
   useEffect(() => {
     const stop = subscribeCatalog(() => setTick((n) => n + 1));
-    if (!loading) {
-      loading = listListings().then(installListings).catch(() => installListings([])).then(() => undefined);
+    // One long-lived snapshot for the whole app — same idea as the old one-shot load.
+    if (!listingsWatchStarted) {
+      listingsWatchStarted = true;
+      watchListings();
     }
     return stop;
   }, []);

@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { isAdminEmail } from "@/lib/admins";
 import { useAuth } from "@/lib/auth";
 import { listOffers, removeOffer, saveOffer, type Offer } from "@/lib/offers";
-import { cancelOrder, confirmOrder, listAllOrders, markPaid, markShipped } from "@/lib/orders-db";
+import { cancelOrder, confirmOrder, listAllOrders, markPaid, markShipped, watchAllOrders } from "@/lib/orders-db";
 import { isMailClub, orderStatusLabel, PROMO_CODE, type SavedOrder } from "@/lib/orders.functions";
-import { CATEGORY_LABEL, HAMPER_TIERS, PRODUCTS, catalogState, formatPrice, installListings, liveProducts, type Category, type Listing } from "@/lib/products";
-import { COLLECTIONS, compressImage, listListings, listReviews, listTickets, removeReview, saveListing, setTicketStatus, suggestReply, useCatalog, type Review, type Ticket } from "@/lib/studio";
+import { CATEGORY_LABEL, HAMPER_TIERS, PRODUCTS, catalogState, formatPrice, liveProducts, type Category, type Listing } from "@/lib/products";
+import { COLLECTIONS, compressImage, listReviews, listTickets, removeReview, saveListing, setTicketStatus, suggestReply, useCatalog, type Review, type Ticket } from "@/lib/studio";
 
 const tabs = [
   { id: "overview", label: "Overview" },
@@ -62,10 +62,21 @@ function AdminPage() {
   useEffect(() => {
     if (!ready || !user || !admin) return;
     let cancel = false;
-    listAllOrders().then((rows) => { if (!cancel) setOrders(rows); }).catch((err: unknown) => { if (!cancel) setError(err instanceof Error ? err.message : "We couldn't load orders."); });
+    let stopOrders: (() => void) | undefined;
+    try {
+      stopOrders = watchAllOrders(
+        (rows) => { if (!cancel) setOrders(rows); },
+        (err) => { if (!cancel) setError(err.message); },
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We couldn't load orders.");
+    }
     listTickets().then((rows) => { if (!cancel) setTickets(rows); }).catch(() => { if (!cancel) setTickets([]); });
     listReviews().then((rows) => { if (!cancel) setReviews(rows); }).catch(() => { if (!cancel) setReviews([]); });
-    return () => { cancel = true; };
+    return () => {
+      cancel = true;
+      stopOrders?.();
+    };
   }, [ready, user, admin]);
 
   if (!ready) return <div className="min-h-[50vh]" />;
@@ -133,6 +144,11 @@ function StockTab({ setError }: { setError: (message: string | null) => void }) 
   const pieces = liveProducts().filter((product) => product.status !== "retired");
   // The real count, even while a piece is paused with Sold out.
   const countOf = (slug: string) => listings[slug]?.stock ?? PRODUCTS.find((p) => p.slug === slug)?.stock ?? 0;
+  // When Confirm stock / Mark paid changes Firestore stock, drop drafts so inputs show the new counts.
+  const stockKey = Object.entries(listings).map(([slug, row]) => `${slug}:${row.stock ?? ""}:${row.soldOut ? 1 : 0}`).sort().join("|");
+  useEffect(() => {
+    setDrafts((prev) => (Object.keys(prev).length ? {} : prev));
+  }, [stockKey]);
   async function save(slug: string, patch: Partial<Listing>) {
     setBusy(slug);
     setError(null);
@@ -143,7 +159,7 @@ function StockTab({ setError }: { setError: (message: string | null) => void }) 
   return (
     <section className="mt-4">
       <h2 className={h2}>Stock</h2>
-      <p className={note}>Set how many of each piece you have. Confirm stock on an order takes its quantity off, and a piece shows Sold out on its own at 0. Use Sold out to pause a piece any time, and Put back to sell it again.</p>
+      <p className={note}>Set how many of each piece you have. Counts update live when you Mark paid or Confirm stock on an order. A piece shows Sold out on its own at 0. Use Sold out to pause a piece any time, and Put back to sell it again.</p>
       {!ready ? <p className="mt-3 text-muted-foreground">Loading stock…</p> : null}
       <ul className="mt-2 divide-y rounded-xl border">
         {pieces.map((product) => {
@@ -180,18 +196,21 @@ function StockTab({ setError }: { setError: (message: string | null) => void }) 
   );
 }
 
-function OrdersTab({ orders, setOrders, setError }: { orders: SavedOrder[] | null; setOrders: (rows: SavedOrder[] | null) => void; setError: (message: string | null) => void }) {
+function OrdersTab({ orders, setOrders, setError }: { orders: SavedOrder[] | null; setOrders: Dispatch<SetStateAction<SavedOrder[] | null>>; setError: (message: string | null) => void }) {
   const [filter, setFilter] = useState<"all" | "pending" | "paid" | "shipped" | "cancelled" | "mail club">("all");
   const [busy, setBusy] = useState("");
   const visible = (orders ?? []).filter((order) => filter === "all" || (filter === "mail club" ? isMailClub(order) : stage(order) === filter));
   async function run(id: string, work: () => Promise<void>, patch: Partial<SavedOrder>) {
     setBusy(id);
     setError(null);
+    // Optimistic: badges/buttons flip immediately; the orders snapshot confirms or corrects next.
+    setOrders((prev) => (prev ?? []).map((order) => order.orderId === id ? { ...order, ...patch } : order));
     try {
       await work();
-      setOrders((orders ?? []).map((order) => order.orderId === id ? { ...order, ...patch } : order));
     } catch (err) {
       setError(err instanceof Error ? err.message : "We couldn't update that order.");
+      try { setOrders(await listAllOrders()); }
+      catch { /* snapshot watcher will catch up if it can */ }
     } finally {
       setBusy("");
     }
@@ -231,9 +250,9 @@ function OrdersTab({ orders, setOrders, setError }: { orders: SavedOrder[] | nul
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {stage(order) === "cancelled" ? null : <>
-              {stage(order) === "pending" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, () => markPaid(order.orderId), { paymentStatus: "paid" })}>Mark paid</button> : null}
+              {stage(order) === "pending" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, () => markPaid(order.orderId), { paymentStatus: "paid", status: "order_confirmed" })}>Mark paid</button> : null}
               {order.fulfillment !== "shipped" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, () => markShipped(order.orderId), { fulfillment: "shipped" })}>Mark shipped</button> : null}
-              {order.status !== "order_confirmed" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, async () => { await confirmOrder(order.orderId); installListings(await listListings()); }, { status: "order_confirmed" })}>Confirm stock</button> : null}
+              {order.status !== "order_confirmed" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, () => confirmOrder(order.orderId).then(() => undefined), { status: "order_confirmed" })}>Confirm stock</button> : null}
               {stage(order) === "pending" && order.status === "order_placed" ? <button type="button" className={pill(false)} disabled={busy === order.orderId} onClick={() => run(order.orderId, () => cancelOrder(order.orderId), { status: "order_cancelled" })}>Cancel unpaid order</button> : null}
               </>}
             </div>

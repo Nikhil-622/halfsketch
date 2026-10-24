@@ -9,6 +9,10 @@ interface CartCtx {
   count: number;
   subtotal: number;
   loaded: boolean;
+  drawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
+  setDrawerOpen: (open: boolean) => void;
   add: (slug: string, qty?: number) => void;
   setQty: (slug: string, qty: number) => void;
   remove: (slug: string) => void;
@@ -50,6 +54,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { ready: catalogReady } = useCatalog();
   const [raw, setRaw] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const syncing = useRef(false);
   const owner = useRef("");
 
@@ -119,6 +124,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     count: items.reduce((s, i) => s + i.quantity, 0),
     subtotal: items.reduce((s, i) => s + i.quantity * i.product.price, 0),
     loaded,
+    drawerOpen,
+    openDrawer: () => setDrawerOpen(true),
+    closeDrawer: () => setDrawerOpen(false),
+    setDrawerOpen,
     add: (slug, qty = 1) => setRaw((r) => {
       const catalog = getProduct(slug);
       const max = catalog?.stock ?? 0;

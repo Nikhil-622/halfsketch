@@ -34,7 +34,7 @@ export const Route = createFileRoute("/shop_/$slug")({
 function ProductPage() {
   const { slug, product: loaded } = Route.useLoaderData();
   const { ready } = useCatalog();
-  const { add, items } = useCart();
+  const { add, items, openDrawer } = useCart();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -90,7 +90,7 @@ function ProductPage() {
               <button className="btn-ink flex-1 whitespace-nowrap !px-4 !py-3 md:flex-none" onClick={() => {
                 const held = items.find((i) => i.slug === p.slug)?.quantity ?? 0;
                 if (held + qty > p.stock) { setNote(`Only ${p.stock} available`); return; }
-                add(p.slug, qty); setAdded(true); setNote("");
+                add(p.slug, qty); setAdded(true); setNote(""); openDrawer();
               }}>Add to cart</button>
               {note ? <p className="w-full text-[0.62rem] text-pink" role="status">{note}</p> : null}
               {added && (

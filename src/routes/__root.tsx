@@ -15,6 +15,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
 import { CartProvider } from "@/lib/cart";
 import { useCatalog } from "@/lib/studio";
+import { CartDrawer } from "@/components/site/CartDrawer";
+import { CartNudge } from "@/components/site/CartNudge";
 import { MobileTabBar, Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 
@@ -149,6 +151,8 @@ function RootComponent() {
           <Footer />
           <div aria-hidden className="h-[calc(var(--tabbar)+env(safe-area-inset-bottom))] md:hidden" />
           <MobileTabBar />
+          <CartNudge />
+          <CartDrawer />
         </CartProvider>
       </AuthProvider>
     </QueryClientProvider>

@@ -1,5 +1,4 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
 import { useCart } from "@/lib/cart";
 import { SHIPPING_RUPEES } from "@/lib/orders.functions";
 import { INSTAGRAM_URL, MAIL_CLUB, PRODUCTS, formatPrice, getProduct } from "@/lib/products";
@@ -28,20 +27,18 @@ const STEPS = [
 
 function MailClub() {
   const { ready } = useCatalog();
-  const { items, add, setQty } = useCart();
+  const { items, add, setQty, openDrawer } = useCart();
   const navigate = useNavigate();
-  const [qty, setQtyDraft] = useState(1);
   const base = PRODUCTS.find((p) => p.slug === MAIL_CLUB.slug)!;
   const p = getProduct(MAIL_CLUB.slug) ?? base;
   const open = p.available && p.price > 0;
   const soldOut = p.status === "sold-out";
+  // Quantity is the cart line — same as shop cards — so +/− update the bag count immediately.
+  const qty = items.find((i) => i.slug === p.slug)?.quantity ?? 0;
 
   function preorder() {
     if (!open) return;
-    const n = Math.min(Math.max(1, qty), p.stock);
-    // Re-clicking just resets the quantity — it never stacks a second line or places an order by itself.
-    if (items.some((i) => i.slug === p.slug)) setQty(p.slug, n);
-    else add(p.slug, n);
+    if (qty < 1) add(p.slug, 1);
     navigate({ to: "/checkout" });
   }
 
@@ -72,10 +69,10 @@ function MailClub() {
               <p className="mt-1 text-sm text-muted-foreground">One-time purchase for the November edition — you'll never be charged again.</p>
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 {open ? (
-                  <div className="flex items-center border text-sm" role="group" aria-label="Number of parcels">
-                    <button type="button" className="size-11" aria-label="One fewer parcel" onClick={() => setQtyDraft(Math.max(1, qty - 1))}>−</button>
-                    <span className="w-6 text-center tabular-nums" aria-live="polite">{qty}</span>
-                    <button type="button" className="size-11" aria-label="One more parcel" disabled={qty >= p.stock} onClick={() => setQtyDraft(Math.min(p.stock, qty + 1))}>+</button>
+                  <div className="flex items-center border text-sm" role="group" aria-label="Parcels in your cart">
+                    <button type="button" className="size-11 disabled:opacity-30" aria-label="One fewer parcel" disabled={qty === 0} onClick={() => setQty(p.slug, qty - 1)}>−</button>
+                    <span className={`w-6 text-center tabular-nums ${qty ? "text-pink" : ""}`} aria-live="polite">{qty}</span>
+                    <button type="button" className="size-11 disabled:opacity-30" aria-label="Add a parcel to cart" disabled={qty >= p.stock} onClick={() => { add(p.slug); openDrawer(); }}>+</button>
                   </div>
                 ) : null}
                 <button type="button" className="btn-ink flex-1 whitespace-nowrap !px-4 md:flex-none" disabled={!open} onClick={preorder}>{cta}</button>

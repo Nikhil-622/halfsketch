@@ -2,10 +2,12 @@ import {
   collection,
   doc,
   getDocs,
+  onSnapshot,
   query,
   runTransaction,
   updateDoc,
   where,
+  type Unsubscribe,
 } from "firebase/firestore";
 import { noteCustomer } from "./studio";
 import { firebaseAuth, firebaseDb } from "./firebase";
@@ -127,16 +129,28 @@ export async function listOrdersByEmail(email: string): Promise<SavedOrder[]> {
   }
 }
 
+function sortOrders(rows: SavedOrder[]) {
+  return rows.sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+}
+
 export async function listAllOrders(): Promise<SavedOrder[]> {
   const store = db();
   try {
     const snap = await getDocs(collection(store, "orders"));
-    return snap.docs
-      .map((item) => asOrder(item.data(), item.id))
-      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+    return sortOrders(snap.docs.map((item) => asOrder(item.data(), item.id)));
   } catch (error) {
     throw blocked(error, "We couldn't load orders.");
   }
+}
+
+/** Live change detector for the studio Orders tab — badges/buttons stay in sync without a reload. */
+export function watchAllOrders(onRows: (rows: SavedOrder[]) => void, onError?: (error: Error) => void): Unsubscribe {
+  const store = db();
+  return onSnapshot(
+    collection(store, "orders"),
+    (snap) => onRows(sortOrders(snap.docs.map((item) => asOrder(item.data(), item.id)))),
+    (error) => onError?.(blocked(error, "We couldn't load orders.")),
+  );
 }
 
 export async function confirmOrder(orderId: string) {
@@ -185,8 +199,11 @@ async function patchOrder(orderId: string, patch: Record<string, string>) {
   }
 }
 
-export function markPaid(orderId: string) {
-  return patchOrder(orderId, { paymentStatus: "paid" });
+// Marking paid also takes each line's quantity off Stock (same as Confirm stock),
+// so the studio does not have to click a second button after payment lands.
+export async function markPaid(orderId: string) {
+  await confirmOrder(orderId);
+  await patchOrder(orderId, { paymentStatus: "paid" });
 }
 
 export function markShipped(orderId: string) {

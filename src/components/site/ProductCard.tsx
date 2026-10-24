@@ -5,7 +5,7 @@ import { CATEGORY_LABEL, STATUS_LABEL, formatPrice, type Product } from "@/lib/p
 export function ProductCard({ product, tall = false, compact = false }: { product: Product; tall?: boolean; compact?: boolean }) {
   const soldOut = product.status === "sold-out" || (!product.available && product.status !== "retired" && product.status !== "coming-soon");
   const frame = compact ? "aspect-square p-2" : `${tall ? "aspect-[3/4]" : "aspect-[4/5]"} p-4`;
-  const { add, setQty, items } = useCart();
+  const { add, setQty, items, openDrawer } = useCart();
   const qty = items.find((i) => i.slug === product.slug)?.quantity ?? 0;
   const canBuy = product.available && !soldOut && product.price > 0 && product.status !== "coming-soon";
   const to = { to: "/shop/$slug", params: { slug: product.slug } } as const;
@@ -47,7 +47,7 @@ export function ProductCard({ product, tall = false, compact = false }: { produc
                 disabled={qty === 0} onClick={() => setQty(product.slug, qty - 1)}>−</button>
               <span className={`w-5 text-center tabular-nums ${qty ? "text-pink" : ""}`} aria-live="polite">{qty}</span>
               <button type="button" className="size-8 disabled:opacity-30" aria-label={`Add ${product.name} to cart`}
-                disabled={qty >= product.stock} onClick={() => add(product.slug)}>+</button>
+                disabled={qty >= product.stock} onClick={() => { add(product.slug); openDrawer(); }}>+</button>
             </div>
           ) : null}
         </div>
