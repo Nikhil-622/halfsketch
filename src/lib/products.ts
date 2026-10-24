@@ -83,19 +83,34 @@ export const MAIL_CLUB = {
   editionLabel: "November edition",
   theme: "The Art of Doing Nothing",
   message: "A little reminder that you don't have to be productive every minute of the day.",
-  cover: "/illustrations/mail-club-envelope.svg",
+  // Collage of the five pieces (made from the photos below). The inclusion photos live in public/assets/mc_*.jpg.
+  cover: "/assets/mail_club_cover.jpg",
   // Optional text shown under shipping, e.g. "Posted in the first week of November". Leave empty until decided.
   shipsNote: "",
   includes: [
-    { name: "Sleepy ginger cat postcard", line: "A ginger cat asleep among fallen autumn leaves — for rest, comfort and slow days.", image: "" },
-    { name: "Ivy-covered doorway bookmark", line: "A little doorway wrapped in ivy, to keep between the pages of whatever you're reading.", image: "" },
-    { name: "November calendar", line: "The whole month on one page, with the same sleepy cat keeping you company.", image: "" },
-    { name: "Three art stamps", line: "Tiny stamp-style artworks — the cat, the leaves and the doorway. Decorative, not postage.", image: "" },
-    { name: "A personal letter", line: "A handwritten-style note from us, about the guilt of doing nothing and the comfort of quiet days.", image: "" },
+    { name: "Sleepy ginger cat postcard", line: "A ginger cat curled up asleep among fallen autumn leaves — for rest, comfort and slow days.", image: "/assets/mc_cat_postcard.jpg" },
+    { name: "Ivy-covered window bookmark", line: "A little window wrapped in red autumn ivy, to keep between the pages of whatever you're reading.", image: "/assets/mc_ivy_bookmark.jpg" },
+    { name: "November calendar", line: "The whole month on one page, with the same sleepy cat keeping you company.", image: "/assets/mc_november_calendar.jpg" },
+    { name: "Three art stamps", line: "Tiny stamp-style artworks — a cat in the leaves, an autumn bouquet and an ivy cottage. Decorative, not postage.", image: "/assets/mc_art_stamps.jpg" },
+    { name: "A personal letter", line: "A letter from us, about the guilt of doing nothing and the comfort of quiet days.", image: "/assets/mc_letter.jpg" },
   ],
-  // The letter as it will be printed, one paragraph per entry. Leave empty until the final letter is ready —
-  // the page then shows only its opening ("Dear you,") and says the rest arrives in the parcel.
-  letter: [] as string[],
+  // The letter as printed (after "Dear you,"), one paragraph per entry. The page shows only the first
+  // `letterPreview` paragraphs and keeps the rest for the parcel.
+  letterPreview: 4,
+  letter: [
+    "I wonder when we started feeling guilty about doing nothing.",
+    "Somewhere along the way, even our quiet days began to feel like unfinished to-do lists. We count the things we accomplish, the places we go, the plans we make. And on the days when we do very little, we sometimes feel as though we have somehow fallen behind.",
+    "But look at this little cat.",
+    "It has found a place among the fallen leaves, tucked its paws beneath itself, and decided that, for now, this is enough. It doesn't seem concerned about the things it hasn't done today.",
+    "Maybe there is something lovely in that.",
+    "Maybe not every day needs to become a story worth telling. Maybe some days are simply meant to be lived slowly: a familiar song playing in the background, sunlight on the floor, a walk without a destination, or an afternoon when you finally let yourself rest.",
+    "If you've been waiting for permission to slow down, perhaps this is your little reminder.",
+    "You are allowed to exist without constantly trying to become something more.",
+    "A little something to think about: What would your day look like if you didn't feel the need to make it productive?",
+    "You don't have to write the answer down. Just let yourself wonder.",
+    "Until the next little letter,",
+    "P.S. I hope something small and ordinary makes you smile today. I think those are often the things worth keeping.",
+  ] as string[],
 } as const;
 
 // To add a product, append an object here — everything else updates automatically.

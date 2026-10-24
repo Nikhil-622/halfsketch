@@ -71,8 +71,8 @@ function Home() {
           </h2>
           <div className="mt-6 grid items-center gap-8 md:mt-10 md:grid-cols-2 md:gap-14">
             <Link to="/mail-club" className="group block overflow-hidden">
-              <img src={MAIL_CLUB.cover} alt="A kraft envelope sealed with pink wax among autumn leaves" loading="lazy" decoding="async" width={1000} height={1000}
-                className={`${frame} aspect-[3/2] w-full transition duration-700 group-hover:scale-[1.02]`} />
+              <img src={MAIL_CLUB.cover} alt="The November Mail Club: a sleepy cat postcard, an ivy bookmark, a November calendar, three art stamps and a letter" loading="lazy" decoding="async" width={1200} height={1200}
+                className={`${frame} aspect-square w-full transition duration-700 group-hover:scale-[1.02]`} />
             </Link>
             <div>
               <p className="eyebrow text-muted-foreground">{MAIL_CLUB.editionLabel} · one-time parcel</p>
