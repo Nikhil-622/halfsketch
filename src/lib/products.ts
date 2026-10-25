@@ -83,16 +83,16 @@ export const MAIL_CLUB = {
   editionLabel: "November edition",
   theme: "The Art of Doing Nothing",
   message: "A little reminder that you don't have to be productive every minute of the day.",
-  // Collage of the five pieces (made from the photos below). The inclusion photos live in public/assets/mc_*.jpg.
-  cover: "/assets/mail_club_cover.jpg",
+  // Collage of the five pieces (made from the photos below). The inclusion photos live in public/assets/mc_*.webp.
+  cover: "/assets/mail_club_cover.webp",
   // Optional text shown under shipping, e.g. "Posted in the first week of November". Leave empty until decided.
   shipsNote: "",
   includes: [
-    { name: "Sleepy ginger cat postcard", line: "A ginger cat curled up asleep among fallen autumn leaves — for rest, comfort and slow days.", image: "/assets/mc_cat_postcard.jpg" },
-    { name: "Ivy-covered window bookmark", line: "A little window wrapped in red autumn ivy, to keep between the pages of whatever you're reading.", image: "/assets/mc_ivy_bookmark.jpg" },
-    { name: "November calendar", line: "The whole month on one page, with the same sleepy cat keeping you company.", image: "/assets/mc_november_calendar.jpg" },
-    { name: "Three art stamps", line: "Tiny stamp-style artworks — a cat in the leaves, an autumn bouquet and an ivy cottage. Decorative, not postage.", image: "/assets/mc_art_stamps.jpg" },
-    { name: "A personal letter", line: "A letter from us, about the guilt of doing nothing and the comfort of quiet days.", image: "/assets/mc_letter.jpg" },
+    { name: "Sleepy ginger cat postcard", line: "A ginger cat curled up asleep among fallen autumn leaves — for rest, comfort and slow days.", image: "/assets/mc_cat_postcard.webp" },
+    { name: "Ivy-covered window bookmark", line: "A little window wrapped in red autumn ivy, to keep between the pages of whatever you're reading.", image: "/assets/mc_ivy_bookmark.webp" },
+    { name: "November calendar", line: "The whole month on one page, with the same sleepy cat keeping you company.", image: "/assets/mc_november_calendar.webp" },
+    { name: "Three art stamps", line: "Tiny stamp-style artworks — a cat in the leaves, an autumn bouquet and an ivy cottage. Decorative, not postage.", image: "/assets/mc_art_stamps.webp" },
+    { name: "A personal letter", line: "A letter from us, about the guilt of doing nothing and the comfort of quiet days.", image: "/assets/mc_letter.webp" },
   ],
   // The letter as printed (after "Dear you,"), one paragraph per entry. The page shows only the first
   // `letterPreview` paragraphs and keeps the rest for the parcel.
@@ -136,7 +136,7 @@ export const PRODUCTS: Product[] = [
       { label: "Medium", value: "Hand-painted" },
       { label: "Finish", value: "Cotton tassel" },
     ],
-    images: ["/assets/red_house_bookmark.png"], available: true, stock: 1, status: "new",
+    images: ["/assets/red_house_bookmark.webp"], available: true, stock: 1, status: "new",
     collection: "Everyday", createdAt: "2026-10-24",
   },
   {
@@ -148,14 +148,15 @@ export const PRODUCTS: Product[] = [
       { label: "Medium", value: "Hand-painted watercolour" },
       { label: "Lettering", value: "Hand-written \"Happy Diwali!\"" },
     ],
-    images: ["/assets/happy_diwali_postcard.jpg"], available: true, stock: 1, status: "new",
+    images: ["/assets/happy_diwali_postcard.webp"], available: true, stock: 1, status: "new",
     collection: "Gift", createdAt: "2026-10-24",
   },
   // New pieces go here. Example (photo in public/assets/, category "bookmarks" | "postcards" | "calendars"):
+  // Prefer WebP (run `npm run optimize:images` after dropping photos).
   // {
   //   id: "b1", name: "Piece name", slug: "piece-name", category: "bookmarks", price: 119,
   //   description: "One line for the card.", story: "A short paragraph for the product page.",
-  //   details: spec("5 × 18 cm"), images: ["/assets/piece_name.jpg"], available: true, stock: 1, status: "new",
+  //   details: spec("5 × 18 cm"), images: ["/assets/piece_name.webp"], available: true, stock: 1, status: "new",
   //   createdAt: "2026-10-24",
   // },
 ];

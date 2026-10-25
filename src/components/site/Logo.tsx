@@ -1,5 +1,5 @@
 /**
- * Wordmark from public/assets/logo.png (1254×1254, artwork centered, white knocked out).
+ * Wordmark from public/assets/logo.webp (artwork centered, white knocked out).
  * The box clips to the letters. Footer includes the tagline line.
  */
 export function Logo({ className = "h-12", withTagline = false }: { className?: string; withTagline?: boolean }) {
@@ -9,8 +9,12 @@ export function Logo({ className = "h-12", withTagline = false }: { className?: 
       style={{ aspectRatio: withTagline ? "750 / 545" : "750 / 470" }}
     >
       <img
-        src="/assets/logo.png"
+        src="/assets/logo.webp"
         alt="Halfस्केच"
+        width={1254}
+        height={1254}
+        decoding="async"
+        fetchPriority="high"
         className="absolute max-w-none"
         style={
           withTagline

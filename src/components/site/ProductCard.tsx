@@ -16,6 +16,9 @@ export function ProductCard({ product, tall = false, compact = false }: { produc
           <img
             src={product.images[0]}
             alt=""
+            width={600}
+            height={750}
+            sizes="(max-width: 768px) 50vw, 25vw"
             loading="lazy"
             decoding="async"
             fetchPriority="low"

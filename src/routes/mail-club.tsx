@@ -51,7 +51,7 @@ function MailClub() {
         <div aria-hidden className="absolute inset-0 -z-10 bg-paper" />
         <div className={`${wrap} grid items-center gap-8 py-8 md:grid-cols-2 md:gap-14 md:py-20`}>
           <img src={MAIL_CLUB.cover} alt="The November Mail Club: a sleepy cat postcard, an ivy bookmark, a November calendar, three art stamps and a letter" width={1200} height={1200}
-            fetchPriority="high" className="mx-auto aspect-square w-full max-w-md border border-foreground/30 bg-background object-cover shadow-[0_10px_30px_-18px_rgb(0_0_0/0.45)]" />
+            fetchPriority="high" decoding="async" sizes="(max-width: 768px) 90vw, 28rem" className="mx-auto aspect-square w-full max-w-md border border-foreground/30 bg-background object-cover shadow-[0_10px_30px_-18px_rgb(0_0_0/0.45)]" />
           <div>
             <p className="eyebrow text-muted-foreground">Halfस्केच Mail Club · {MAIL_CLUB.editionLabel}</p>
             <h1 className="display mt-3">{MAIL_CLUB.theme}</h1>
@@ -122,7 +122,7 @@ function MailClub() {
             {MAIL_CLUB.includes.map((item, i) => (
               <li key={item.name} className="min-w-0">
                 {item.image ? (
-                  <img src={item.image} alt={item.name} loading="lazy" className="aspect-square w-full border border-foreground/15 bg-background object-cover" />
+                  <img src={item.image} alt={item.name} width={600} height={600} sizes="(max-width: 768px) 45vw, 18vw" loading="lazy" decoding="async" className="aspect-square w-full border border-foreground/15 bg-background object-cover" />
                 ) : (
                   <div className="grid aspect-square w-full place-items-center border border-dashed border-foreground/30 bg-background p-3 text-center">
                     <div>

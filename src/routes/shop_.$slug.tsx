@@ -60,7 +60,7 @@ function ProductPage() {
       <Link to="/shop" className="eyebrow link-sketch text-muted-foreground">← Shop</Link>
       <div className="mt-3 grid gap-8 md:mt-6 md:grid-cols-12 md:gap-12">
         <div className="relative md:col-span-7">
-          <img src={p.images[0]} alt={p.name} className="aspect-square w-full border border-foreground/15 bg-paper object-contain p-3 md:aspect-[4/5] md:p-8" />
+          <img src={p.images[0]} alt={p.name} width={900} height={1125} sizes="(max-width: 768px) 100vw, 40vw" fetchPriority="high" decoding="async" className="aspect-square w-full border border-foreground/15 bg-paper object-contain p-3 md:aspect-[4/5] md:p-8" />
           {soldOut ? (
             <span className="absolute left-1 top-1 bg-foreground px-1 py-px text-[0.5rem] font-medium uppercase leading-none tracking-[0.06em] text-background">Sold out</span>
           ) : null}

@@ -19,7 +19,7 @@ function Story() {
       <div className="mx-auto max-w-[1400px] px-5 pt-12 md:px-10">
         <h1 className="display max-w-5xl">Two people.<br />One little idea.</h1>
         <div className="mt-6 grid gap-4 md:mt-16 md:grid-cols-12 md:gap-12">
-          <img src="/assets/about_us2.jpeg" alt="Nikhil and Disha" className="w-full bg-paper object-contain md:col-span-8" />
+          <img src="/assets/about_us2.webp" alt="Nikhil and Disha" width={1200} height={900} loading="lazy" decoding="async" className="w-full bg-paper object-contain md:col-span-8" />
           <p className="font-script self-end text-5xl leading-tight text-pink md:col-span-4">"it doesn't have to be finished to be finished."</p>
         </div>
         <div className="mt-8 grid gap-6 md:mt-24 md:grid-cols-12 md:gap-10">

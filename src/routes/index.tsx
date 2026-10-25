@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { ArrowRight } from "lucide-react";
 import { ProductCard } from "@/components/site/ProductCard";
 import { PersonalCta } from "@/components/site/PersonalCta";
-import { IMAGES, INSTAGRAM_URL, MAIL_CLUB, liveProducts } from "@/lib/products";
+import { IMAGES, MAIL_CLUB, liveProducts } from "@/lib/products";
 import { useCatalog } from "@/lib/studio";
 
 const HERO = "/illustrations/fox-studio.svg";
@@ -26,8 +26,8 @@ const frame = "border border-foreground/30 bg-paper object-cover shadow-[0_10px_
 
 // Cover photo per collection: drop a file in public/assets/ and put its path in `img`. Empty = "photo coming soon".
 const COLLECTIONS = [
-  { name: "Postcards", img: "/assets/happy_diwali_postcard.jpg", to: "/shop", category: "postcards" },
-  { name: "Bookmarks", img: "/assets/red_house_bookmark.png", to: "/shop", category: "bookmarks" },
+  { name: "Postcards", img: "/assets/happy_diwali_postcard.webp", to: "/shop", category: "postcards" },
+  { name: "Bookmarks", img: "/assets/red_house_bookmark.webp", to: "/shop", category: "bookmarks" },
   { name: "Calendars", img: "", to: "/shop", category: "calendars" },
 ] as const;
 
@@ -156,7 +156,7 @@ function Home() {
         <Link to="/story" className="btn-ink mt-8 min-w-56 bg-transparent">Read our story</Link>
       </section>
 
-      {/* THE SKETCHBOOK — collage */}
+      {/* THE SKETCHBOOK — collage (hidden for now; broken collage assets)
       <section className={`${wrap} grid items-center gap-10 py-12 md:grid-cols-2 md:gap-12 md:py-24`}>
         <div className="relative mx-auto aspect-square w-full max-w-xl">
           <img src="/assets/group_bookmark_sm.jpg" alt="" loading="lazy" className={`${frame} absolute left-[12%] top-[16%] z-10 h-[66%] w-[38%]`} />
@@ -176,6 +176,7 @@ function Home() {
           </a>
         </div>
       </section>
+      */}
 
       <PersonalCta />
     </>
