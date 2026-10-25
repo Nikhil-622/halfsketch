@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
+import { BrushLoader } from "@/components/site/BrushLoader";
 import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
@@ -124,8 +125,9 @@ function PaymentPage() {
           const promo = sessionStorage.getItem(PROMO_KEY) ?? "";
           const priced = await createOrder({ data: { customer: buyer, items: snapshot, promo } });
           const placed = await saveOrder(priced);
+          // Remembering the address for next time shouldn't hold up the QR code.
           if (user) {
-            await saveProfile({
+            void saveProfile({
               name: buyer.customerName,
               email: buyer.email,
               phone: buyer.phone,
@@ -133,7 +135,7 @@ function PaymentPage() {
               city: buyer.city,
               state: buyer.state,
               postalCode: buyer.postalCode,
-            });
+            }).catch(() => undefined);
           }
           sessionStorage.setItem(PLACED_KEY, JSON.stringify(placed));
           sessionStorage.setItem("halfsketch-last-order", JSON.stringify(placed));
@@ -180,7 +182,7 @@ function PaymentPage() {
     );
   }
 
-  if (!order) return <div className="min-h-[50vh]" />;
+  if (!order) return <BrushLoader label="Wrapping it up…" hint="Placing your order and preparing your payment code. This only takes a moment." />;
 
   const payLink = upiPayLink(order.total);
 
@@ -196,16 +198,24 @@ function PaymentPage() {
       <p className="type mt-5">
         Please complete the payment below. The studio will confirm your payment and ship your order once it is received.
       </p>
-      <div className="mt-8 w-full max-w-[280px] border border-foreground/20 bg-paper px-6 pb-5 pt-6 max-md:order-1">
+      <p className="mt-6 font-mono text-2xl">Pay {formatPrice(order.total)}</p>
+      {/* QR first, then the UPI id, then the in-app button and WhatsApp */}
+      <div className="mt-4 w-full max-w-[300px] border border-foreground/20 bg-paper px-6 pb-5 pt-6">
         {qr ? (
           <img src={qr} alt={`UPI code for ${formatPrice(order.total)}`} className="mx-auto h-56 w-56" />
         ) : (
           <div className="mx-auto grid h-56 w-56 place-items-center text-sm text-muted-foreground">Preparing the code…</div>
         )}
-        <p className="mt-3 text-sm text-muted-foreground"><span className="md:hidden">Paying from another phone? </span>Scan with any UPI app</p>
+        <p className="mt-3 text-sm">Scan and pay by any UPI app</p>
+        <p className="mt-3 flex flex-wrap items-center justify-center gap-2 border-t border-foreground/15 pt-3 text-base text-foreground">
+          {UPI_ID}
+          <button type="button" className="btn-ink !min-h-0 !px-4 !py-2 !text-[0.6rem]" onClick={copyUpi}>
+            {copied ? "Copied" : "Copy"}
+          </button>
+        </p>
       </div>
-      <p className="mt-6 font-mono text-2xl">Pay {formatPrice(order.total)}</p>
-      <a href={payLink} className="btn-ink mt-6 w-full">Pay in UPI app</a>
+      <p className="eyebrow my-5 flex w-full items-center gap-3 text-muted-foreground before:h-px before:flex-1 before:bg-foreground/20 after:h-px after:flex-1 after:bg-foreground/20">or</p>
+      <a href={payLink} className="btn-ink w-full">Pay in UPI app</a>
       <a
         href={whatsappHref(order)}
         target="_blank"
@@ -214,15 +224,9 @@ function PaymentPage() {
       >
         Send order details on WhatsApp
       </a>
-      <div className="type mt-6 w-full border border-foreground/20 bg-paper px-5 py-5">
-        <p>Can’t open a UPI app? Pay manually to:</p>
-        <p className="mt-2 flex flex-wrap items-center justify-center gap-2 text-base text-foreground">
-          {UPI_ID}
-          <button type="button" className="btn-ink !min-h-0 !px-4 !py-2 !text-[0.6rem]" onClick={copyUpi}>
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </p>
-      </div>
+      {/* UPI doesn't tell the site a payment went through, so this only moves on — the studio still checks it. */}
+      <button type="button" className="btn-line mt-6" onClick={() => navigate({ to: "/order-confirmation" })}>I've paid — continue</button>
+      <p className="type mt-2 text-muted-foreground">We'll confirm your order as soon as the studio sees your payment.</p>
     </div>
   );
 }

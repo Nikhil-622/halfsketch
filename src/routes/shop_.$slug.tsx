@@ -128,12 +128,13 @@ function ProductPage() {
             ))}
             <form className="mt-6 grid gap-3" onSubmit={async (e) => {
               e.preventDefault();
-              const data = new FormData(e.currentTarget);
+              const form = e.currentTarget;
+              const data = new FormData(form);
               setReviewNote("");
               try {
                 await addReview({ slug, name: String(data.get("name") || ""), stars: Number(data.get("stars") || 5), text: String(data.get("text") || "") });
                 setReviews(await listReviews().then((rows) => rows.filter((row) => row.slug === slug)));
-                e.currentTarget.reset();
+                form.reset();
                 setReviewNote("Saved. Thank you.");
               } catch (err) {
                 setReviewNote(err instanceof Error ? err.message : "We couldn't save that review.");

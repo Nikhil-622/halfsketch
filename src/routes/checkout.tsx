@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth, type UserProfile } from "@/lib/auth";
 import { useCart } from "@/lib/cart";
@@ -6,6 +6,9 @@ import { formatPrice } from "@/lib/products";
 import { listOffers, quote, type Offer } from "@/lib/offers";
 import { PENDING_CHECKOUT_KEY, PROMO_KEY, SHIPPING_RUPEES, type Customer } from "@/lib/orders.functions";
 import { hasOrdered } from "@/lib/studio";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -48,6 +51,9 @@ function Checkout() {
   const { items, subtotal } = useCart();
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const router = useRouter();
+  // Fetch the payment page's code while the shopper fills in the form, so it opens instantly.
+  useEffect(() => { router.preloadRoute({ to: "/payment" }).catch(() => undefined); }, [router]);
   const [draft, setDraft] = useState("");
   const [promo, setPromo] = useState("");
   const [rejected, setRejected] = useState(false);
@@ -70,8 +76,11 @@ function Checkout() {
     setRejected(!next.ok);
   }
 
+  const [needSignIn, setNeedSignIn] = useState(false);
+
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!user) { setNeedSignIn(true); return; }
     const customer = Object.fromEntries(new FormData(e.currentTarget)) as unknown as Customer;
     sessionStorage.setItem(PENDING_CHECKOUT_KEY, JSON.stringify(customer));
     sessionStorage.setItem(PROMO_KEY, promo);
@@ -102,6 +111,21 @@ function Checkout() {
             <p><span className="font-medium text-foreground">Next:</span> a Google Pay code for {shipping === 0 ? "your pieces, with shipping removed." : `your pieces plus ₹${shipping} shipping.`} The order is placed after you pay.</p>
           </div>
           <button type="submit" className="btn-ink col-span-2 justify-center">Proceed to payment</button>
+          <AlertDialog open={needSignIn} onOpenChange={setNeedSignIn}>
+            <AlertDialogContent className="w-[calc(100%-2.5rem)] rounded-none border-foreground/30 bg-paper px-6 py-8 shadow-[0_18px_40px_-18px_rgb(0_0_0/0.5)]">
+              <AlertDialogHeader className="text-center sm:text-center">
+                <AlertDialogTitle className="font-script text-5xl font-normal leading-none">Sign in first</AlertDialogTitle>
+                <AlertDialogDescription className="type mt-3 text-foreground">
+                  You must sign in before moving further. It keeps your order, address and cart together, and lets you follow the order in My Orders. Your cart stays as it is.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              {/* the site's own buttons — the UI kit's dialog buttons bring their own black, rounded style */}
+              <div className="mt-6 flex flex-col items-center gap-2">
+                <button type="button" className="btn-ink w-full" onClick={() => navigate({ to: "/sign-in", search: { redirect: "/checkout" } })}>Sign in</button>
+                <button type="button" className="btn-line" onClick={() => setNeedSignIn(false)}>Not now</button>
+              </div>
+            </AlertDialogContent>
+          </AlertDialog>
         </form>
         <aside className="order-first h-fit border-t pt-6 md:order-none">
           <h2 className="eyebrow">Your order</h2>

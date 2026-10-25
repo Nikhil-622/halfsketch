@@ -3,6 +3,10 @@ import { useState, type FormEvent } from "react";
 import { authErrorMessage, useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/sign-in")({
+  validateSearch: (s: Record<string, unknown>): { redirect?: string } => {
+    const to = s["redirect"];
+    return typeof to === "string" && to.startsWith("/") && !to.startsWith("//") ? { redirect: to } : {};
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Halfस्केच" },
@@ -14,6 +18,7 @@ export const Route = createFileRoute("/sign-in")({
 });
 
 function SignInPage() {
+  const back = Route.useSearch().redirect ?? "/";
   const { configured, user, signInEmail, signUpEmail, signInGoogle } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
@@ -31,7 +36,7 @@ function SignInPage() {
     try {
       if (mode === "up") await signUpEmail(email, password, name);
       else await signInEmail(email, password);
-      navigate({ to: "/" });
+      navigate({ to: back });
     } catch (err) {
       setError(authErrorMessage(err));
       setBusy(false);
@@ -43,7 +48,7 @@ function SignInPage() {
     setError(null);
     try {
       await signInGoogle();
-      navigate({ to: "/" });
+      navigate({ to: back });
     } catch (err) {
       setError(authErrorMessage(err));
       setBusy(false);

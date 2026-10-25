@@ -21,7 +21,8 @@ function Contact() {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const data = new FormData(form);
     setBusy(true);
     setNote("");
     try {
@@ -31,7 +32,7 @@ function Contact() {
         orderId: String(data.get("orderId") || ""),
         message: String(data.get("message") || ""),
       });
-      e.currentTarget.reset();
+      form.reset();
       setNote("Sent. The studio will see it on the support desk.");
     } catch (err) {
       setNote(err instanceof Error ? err.message : "We couldn't send that.");

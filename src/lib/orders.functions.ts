@@ -61,8 +61,10 @@ export const createOrder = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }): Promise<PricedOrder> => {
     const items: OrderItem[] = [];
-    for (const i of data.items) {
-      const p = await serverProduct(i.slug);
+    // Look up every piece and the offers at the same time instead of one after another.
+    const [products, offers] = await Promise.all([Promise.all(data.items.map((i) => serverProduct(i.slug))), listOffersServer()]);
+    for (const [n, i] of data.items.entries()) {
+      const p = products[n];
       if (!p || p.status === "retired") throw new Error("One of the pieces in your cart is no longer available.");
       if (p.price <= 0 || p.status === "coming-soon") throw new Error(`"${p.name}" isn't available to order yet.`);
       if (!p.available || p.stock < 1) throw new Error(`"${p.name}" is sold out.`);
@@ -71,7 +73,6 @@ export const createOrder = createServerFn({ method: "POST" })
       items.push({ slug: p.slug, name: p.name, price: p.price, quantity: i.quantity, ...(p.edition ? { edition: p.edition } : {}) });
     }
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
-    const offers = await listOffersServer();
     const email = data.customer.email.toLowerCase();
     const matched = offers.find((offer) => offer.active && offer.code === (data.promo ?? "").trim().toUpperCase());
     const active = matched?.customersOnly ? await hasOrdered(email) : true;
