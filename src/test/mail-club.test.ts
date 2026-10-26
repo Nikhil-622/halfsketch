@@ -22,8 +22,11 @@ describe("November Mail Club edition", () => {
   });
 
   it("lists photos by their filename ending", () => {
-    expect(productFromFile("/public/assets/red_house_bookmark.png")).toMatchObject({ name: "Red House", slug: "red-house-bookmark", category: "bookmarks", available: true });
-    expect(productFromFile("/public/assets/sleepy_cat_postcard.png")).toMatchObject({ category: "postcards" });
+    expect(productFromFile("/public/assets/red_house_bookmark.webp")).toMatchObject({
+      name: "Red House", slug: "red-house-bookmark", category: "bookmarks", available: true,
+      images: ["/assets/red_house_bookmark.webp"],
+    });
+    expect(productFromFile("/public/assets/sleepy_cat_postcard.png")).toMatchObject({ category: "postcards", images: ["/assets/sleepy_cat_postcard.webp"] });
     expect(productFromFile("/public/assets/november_calendar.png")).toMatchObject({ category: "calendars", available: false, status: "coming-soon" });
     expect(productFromFile("/public/assets/group_bookmark_sm.jpg")).toBeNull();
   });

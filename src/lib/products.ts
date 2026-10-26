@@ -128,7 +128,7 @@ export const PRODUCTS: Product[] = [
     edition: MAIL_CLUB.edition, collection: "Mail Club", createdAt: "2026-10-24",
   },
   {
-    id: "b-red-house", name: "The Little Red House", slug: "red-house-bookmark", category: "bookmarks", price: 119,
+    id: "b-red-house", name: "The Little Red House", slug: "red-house-bookmark", category: "bookmarks", price: 80,
     description: "A small red cottage on a green hill, a lone pine and a wide summer sky — tied with a cotton tassel.",
     story: "Some places you only visit in books. This one sits at the top of a quiet hill, with one pine tree for company and clouds drifting past as slowly as they like.\n\nWe painted it for the pages you read on lazy afternoons — so that every time you open your book, there's a little house waiting, door open, kettle probably on.",
     feeling: "Calm · homely · sunny · unhurried",
@@ -154,34 +154,38 @@ export const PRODUCTS: Product[] = [
   // New pieces go here. Example (photo in public/assets/, category "bookmarks" | "postcards" | "calendars"):
   // Prefer WebP (run `npm run optimize:images` after dropping photos).
   // {
-  //   id: "b1", name: "Piece name", slug: "piece-name", category: "bookmarks", price: 119,
+  //   id: "b1", name: "Piece name", slug: "piece-name", category: "bookmarks", price: 80,
   //   description: "One line for the card.", story: "A short paragraph for the product page.",
   //   details: spec("5 × 18 cm"), images: ["/assets/piece_name.webp"], available: true, stock: 1, status: "new",
   //   createdAt: "2026-10-24",
   // },
 ];
 
-// Photo-listed pieces: save a photo in public/assets/ as <name>_bookmark.png, <name>_postcard.png or
-// <name>_calendar.png and it appears in that section of the shop, named from the file
-// ("red_house_bookmark.png" → "Red House", at /shop/red-house-bookmark). It starts at the usual price for
+// Photo-listed pieces: save a photo in public/assets/ as <name>_bookmark.png|.webp, <name>_postcard… or
+// <name>_calendar… and it appears in that section of the shop, named from the file
+// ("red_house_bookmark.webp" → "Red House", at /shop/red-house-bookmark). It starts at the usual price for
 // its kind; change any price in Admin → Products. Calendars have no usual price yet, so they show
 // "Coming soon" until one is set there. A piece written out in PRODUCTS above with the same slug wins.
+// After dropping photos, run `npm run optimize:images` and prefer the .webp files in this folder.
 const FILE_KINDS = {
-  bookmark: { category: "bookmarks", price: 119, line: "A hand-painted bookmark, made to keep your place in the stories you love." },
+  bookmark: { category: "bookmarks", price: 80, line: "A hand-painted bookmark, made to keep your place in the stories you love." },
   postcard: { category: "postcards", price: 180, line: "A hand-painted postcard — to keep, to frame, or to send to someone far away." },
   calendar: { category: "calendars", price: 0, line: "A hand-painted calendar to keep the days company." },
 } as const satisfies Record<string, { category: Category; price: number; line: string }>;
 
 export function productFromFile(path: string): Product | null {
   const file = path.split("/").pop() ?? "";
-  const match = /^(.+)_(bookmark|postcard|calendar)\.png$/i.exec(file);
+  const match = /^(.+)_(bookmark|postcard|calendar)\.(png|jpe?g|webp)$/i.exec(file);
   if (!match) return null;
   const words = match[1]!.split(/[^a-z0-9]+/i).filter(Boolean);
   if (!words.length) return null;
   const kind = FILE_KINDS[match[2]!.toLowerCase() as keyof typeof FILE_KINDS];
   const open = kind.price > 0;
+  const stem = `${match[1]}_${match[2]!.toLowerCase()}`;
+  // Serve the compressed WebP when present (optimize:images writes it next to the original).
+  const image = `/assets/${stem}.webp`;
   return {
-    id: `file-${file}`,
+    id: `file-${stem}`,
     name: words.map((w) => w[0]!.toUpperCase() + w.slice(1).toLowerCase()).join(" "),
     slug: `${words.join("-").toLowerCase()}-${match[2]!.toLowerCase()}`,
     category: kind.category,
@@ -189,7 +193,7 @@ export function productFromFile(path: string): Product | null {
     description: kind.line,
     story: kind.line,
     details: [],
-    images: [`/assets/${file}`],
+    images: [image],
     available: open,
     stock: 1,
     status: open ? "new" : "coming-soon",
@@ -198,10 +202,13 @@ export function productFromFile(path: string): Product | null {
   };
 }
 
-// Vite lists the matching files at build time; nothing is imported from them.
-for (const path of Object.keys(import.meta.glob("/public/assets/*_{bookmark,postcard,calendar}.png"))) {
+// Vite lists matching files at build time. Prefer .webp; skip duplicate stems from leftover originals.
+const seenFileSlugs = new Set(PRODUCTS.map((p) => p.slug));
+for (const path of Object.keys(import.meta.glob("/public/assets/*_{bookmark,postcard,calendar}.{png,jpg,jpeg,webp}"))) {
   const piece = productFromFile(path);
-  if (piece && !PRODUCTS.some((p) => p.slug === piece.slug)) PRODUCTS.push(piece);
+  if (!piece || seenFileSlugs.has(piece.slug)) continue;
+  seenFileSlugs.add(piece.slug);
+  PRODUCTS.push(piece);
 }
 
 const HAMPER_TIERS = [299, 399, 499, 599];
