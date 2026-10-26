@@ -29,6 +29,8 @@ describe("November Mail Club edition", () => {
     expect(productFromFile("/public/assets/sleepy_cat_postcard.png")).toMatchObject({ category: "postcards", images: ["/assets/sleepy_cat_postcard.webp"] });
     expect(productFromFile("/public/assets/november_calendar.png")).toMatchObject({ category: "calendars", available: false, status: "coming-soon" });
     expect(productFromFile("/public/assets/group_bookmark_sm.jpg")).toBeNull();
+    expect(productFromFile("/public/assets/mc_cat_postcard.webp")).toBeNull();
+    expect(productFromFile("/public/assets/mc_ivy_bookmark.webp")).toBeNull();
   });
 
   it("opens an unpriced photo-listed piece once the studio prices it", () => {

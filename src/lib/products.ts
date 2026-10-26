@@ -140,6 +140,57 @@ export const PRODUCTS: Product[] = [
     collection: "Everyday", createdAt: "2026-10-24",
   },
   {
+    id: "b-savor-citrus", name: "Savor the Story", slug: "lemon-bookmark", category: "bookmarks", price: 80,
+    description: "A lemon half and a pink citrus wedge on soft seafoam — with “Savor the Story” lettered by hand.",
+    story: "Some chapters are meant to be tasted slowly. We painted two bright slices of citrus on a quiet wash of green, then wrote a small reminder underneath: savor the story.\n\nKeep it between the pages of whatever you're reading when you need a little zest — and permission to linger.",
+    feeling: "Bright · fresh · unhurried",
+    details: [
+      { label: "Medium", value: "Hand-painted watercolour" },
+      { label: "Lettering", value: "Hand-written “Savor the Story”" },
+      { label: "Finish", value: "Cotton tassel" },
+    ],
+    images: ["/assets/lemon_bookmark.webp"], available: true, stock: 1, status: "new",
+    collection: "Everyday", createdAt: "2026-10-26",
+  },
+  {
+    id: "b-flip-pages", name: "Flip Pages, Not Standards", slug: "emoji-bookmark", category: "bookmarks", price: 80,
+    description: "A cool little crowned smiley with sunglasses, lost in a good book — and a cheeky line up top.",
+    story: "Good books, better vibes. We painted a sunny character with a tiny crown, shades on, holding a green book — the kind of reader who knows exactly what they like.\n\nThe reminder at the top is half joke, half motto: flip pages, not standards. For the friend who chooses their stories carefully.",
+    feeling: "Playful · cool · bookish",
+    details: [
+      { label: "Medium", value: "Hand-painted watercolour" },
+      { label: "Lettering", value: "Hand-written “Flip pages not standards”" },
+      { label: "Finish", value: "Cotton tassel" },
+    ],
+    images: ["/assets/emoji_bookmark.webp"], available: true, stock: 1, status: "new",
+    collection: "Everyday", createdAt: "2026-10-26",
+  },
+  {
+    id: "b-yellow-flowers", name: "Yellow Wildflowers", slug: "yellow-flower-bookmark", category: "bookmarks", price: 80,
+    description: "Three small yellow blooms on a climbing green vine, painted on a soft meadow wash.",
+    story: "These are the flowers you notice on a walk when you're not in a hurry — small, bright, and quietly cheerful.\n\nWe painted a simple vine of yellow wildflowers so your bookmark feels a little like carrying a scrap of sunshine between the pages.",
+    feeling: "Gentle · sunny · simple",
+    details: [
+      { label: "Medium", value: "Hand-painted watercolour" },
+      { label: "Finish", value: "Cotton tassel" },
+    ],
+    images: ["/assets/yellow_flower_bookmark.webp"], available: true, stock: 1, status: "new",
+    collection: "Everyday", createdAt: "2026-10-26",
+  },
+  {
+    id: "b-natures-chapter", name: "Nature's Chapter", slug: "quote-bookmark", category: "bookmarks", price: 80,
+    description: "Two ink ferns against a soft blue circle, with “Nature's Chapter” lettered underneath.",
+    story: "Some stories grow like ferns — slowly, quietly, toward the light. We drew two fronds over a pale blue wash and named the piece for the chapters that feel like a walk outdoors.\n\nA calm bookmark for the books you read when you want the world to soften a little.",
+    feeling: "Calm · botanical · quiet",
+    details: [
+      { label: "Medium", value: "Ink & watercolour" },
+      { label: "Lettering", value: "Hand-written “Nature's Chapter”" },
+      { label: "Finish", value: "Cotton tassel" },
+    ],
+    images: ["/assets/quote_bookmark.webp"], available: true, stock: 1, status: "new",
+    collection: "Everyday", createdAt: "2026-10-26",
+  },
+  {
     id: "p-happy-diwali", name: "A Diya for Diwali", slug: "happy-diwali-postcard", category: "postcards", price: 180,
     description: "A glowing clay diya, fireworks blooming above it and marigolds in every corner — painted in soft watercolour.",
     story: "Diwali always starts small: one diya, one flame, and then the whole sky joins in. We painted that moment — the warm little lamp, the fireworks opening like flowers, and \"Happy Diwali!\" written by hand in gold.\n\nSend it to someone you miss this festival, tuck it into a box of sweets, or keep it on your shelf long after the last cracker has gone quiet.",
@@ -175,6 +226,8 @@ const FILE_KINDS = {
 
 export function productFromFile(path: string): Product | null {
   const file = path.split("/").pop() ?? "";
+  // Mail Club inclusion photos (mc_*.webp) stay on /mail-club only — not shop collections.
+  if (/^mc_/i.test(file)) return null;
   const match = /^(.+)_(bookmark|postcard|calendar)\.(png|jpe?g|webp)$/i.exec(file);
   if (!match) return null;
   const words = match[1]!.split(/[^a-z0-9]+/i).filter(Boolean);

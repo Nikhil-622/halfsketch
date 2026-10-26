@@ -69,7 +69,8 @@ function ProductPage() {
           <p className="eyebrow text-muted-foreground">
             {CATEGORY_LABEL[p.category]}{p.collection ? ` · ${p.collection}` : ""}{p.sketchNo && ` · Sketch ${p.sketchNo}`}
           </p>
-          <h1 className="heading mt-1 line-clamp-2">{p.name}</h1>
+          {/* Script flourishes need extra line-box room — line-clamp was clipping ascenders. */}
+          <h1 className="heading mt-2 overflow-visible pt-2 leading-[1.3]">{p.name}</h1>
           {p.status && !soldOut && (
             <p className="mt-2 inline-block bg-foreground px-2 py-1 text-[0.65rem] font-medium uppercase tracking-[0.14em] text-background">{STATUS_LABEL[p.status]}</p>
           )}
