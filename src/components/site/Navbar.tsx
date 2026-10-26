@@ -24,7 +24,7 @@ function InstagramIcon({ className = "size-4" }: { className?: string }) {
   );
 }
 
-const action = "link-sketch py-2 text-[0.58rem] font-medium uppercase tracking-[0.08em] md:text-[0.7rem] md:tracking-[0.22em]";
+const action = "link-sketch whitespace-nowrap py-2 text-[0.72rem] font-medium uppercase tracking-[0.12em] md:text-[0.7rem] md:tracking-[0.22em]";
 
 export function Navbar() {
   const { count } = useCart();
@@ -33,9 +33,9 @@ export function Navbar() {
   const admin = isAdminEmail(email);
   return (
     <header className="sticky top-0 z-40 border-b border-foreground/20 bg-paper/95 backdrop-blur-sm">
-      <nav aria-label="Main" className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-y-1 px-4 py-1.5 md:flex-nowrap md:gap-10 md:px-10 md:py-2.5">
-        <Link to="/" aria-label="Halfस्केच home" className="justify-self-start">
-          <Logo className="h-6 md:h-7" />
+      <nav aria-label="Main" className="mx-auto flex max-w-[1400px] flex-nowrap items-center px-4 py-2 md:gap-10 md:px-10 md:py-2.5">
+        <Link to="/" aria-label="Halfस्केच home">
+          <Logo className="h-8 md:h-7" />
         </Link>
         <ul className="hidden items-center gap-9 md:ml-auto md:flex">
           {tabs.map((l) => (
@@ -49,7 +49,7 @@ export function Navbar() {
             </a>
           </li>
         </ul>
-        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-1 md:ml-0 md:flex-nowrap md:gap-7">
+        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-x-3 gap-y-1 md:ml-0 md:flex-nowrap md:gap-7">
           {user ? (
             <>
               <Link to="/account" className="grid place-items-center" aria-label="Your profile">
@@ -62,8 +62,8 @@ export function Navbar() {
             <Link to="/sign-in" className={action}>Sign in</Link>
           )}
           <Link to="/cart" className="inline-flex min-h-10 items-center gap-0.5 pl-2" aria-label={`Cart, ${count} items`}>
-            <ShoppingBag className="size-4 md:size-5" />
-            <span className="font-mono text-xs text-pink md:text-sm">({count})</span>
+            <ShoppingBag className="size-5" />
+            <span className="font-mono text-sm text-pink">({count})</span>
           </Link>
         </div>
       </nav>

@@ -331,7 +331,8 @@ function AddPiece({ setError }: { setError: (message: string | null) => void }) 
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const data = new FormData(form);
     const name = String(data.get("name") || "").trim();
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
     const stock = soldOut ? 0 : Math.max(0, Number(data.get("stock") || 0));
@@ -350,7 +351,7 @@ function AddPiece({ setError }: { setError: (message: string | null) => void }) 
     setError(null);
     try {
       await saveListing(row);
-      e.currentTarget.reset();
+      form.reset();
       setImage("");
       setSoldOut(false);
       setTiers([]);

@@ -19,8 +19,8 @@ export function CartDrawer() {
         className="flex w-full flex-col gap-0 border-l border-foreground/20 bg-paper p-0 sm:max-w-md"
       >
         <SheetHeader className="border-b border-foreground/15 px-5 py-4 pr-12 text-left">
-          <SheetTitle className="heading text-xl font-normal">Your cart</SheetTitle>
-          <SheetDescription className="text-xs text-muted-foreground">
+          <SheetTitle className="font-script text-5xl font-normal leading-none">Your cart</SheetTitle>
+          <SheetDescription className="mt-1 text-sm text-muted-foreground">
             {count === 0 ? "Nothing here yet" : `${count} ${count === 1 ? "piece" : "pieces"}`}
           </SheetDescription>
         </SheetHeader>
