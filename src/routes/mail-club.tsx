@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { PriceLoader } from "@/components/site/BrushLoader";
 import { useCart } from "@/lib/cart";
 import { SHIPPING_RUPEES } from "@/lib/orders.functions";
 import { INSTAGRAM_URL, MAIL_CLUB, PRODUCTS, formatPrice, getProduct } from "@/lib/products";
@@ -63,7 +64,9 @@ function MailClub() {
 
             <div className="mt-6 border-y border-foreground/20 py-5" id="buy">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <p className="text-2xl tabular-nums">{ready && p.price > 0 ? formatPrice(p.price) : <span className="text-muted-foreground">Price coming soon</span>}</p>
+                <p className="text-2xl tabular-nums">
+                  {!ready ? <PriceLoader /> : p.price > 0 ? formatPrice(p.price) : <span className="text-muted-foreground">Price coming soon</span>}
+                </p>
                 <p className="eyebrow">{!ready ? "" : open ? "Limited edition · pre-order" : soldOut ? "Sold out" : "Coming soon"}</p>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">One-time purchase for the November edition — you'll never be charged again.</p>
@@ -184,7 +187,9 @@ function MailClub() {
       <div className="fixed inset-x-0 bottom-[calc(var(--tabbar)+env(safe-area-inset-bottom))] z-30 flex items-center gap-3 border-t bg-background/95 px-5 py-3 backdrop-blur-sm md:hidden">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">November Mail Club</p>
-          <p className="text-xs text-muted-foreground tabular-nums">{ready && p.price > 0 ? `${formatPrice(p.price)} · one-time` : "Price coming soon"}</p>
+          <p className="text-xs text-muted-foreground tabular-nums">
+            {!ready ? <PriceLoader /> : p.price > 0 ? `${formatPrice(p.price)} · one-time` : "Price coming soon"}
+          </p>
         </div>
         <button type="button" className="btn-ink ml-auto shrink-0 !px-4 !text-[0.62rem]" disabled={!open} onClick={preorder}>{!ready ? "Checking…" : open ? "Pre-order" : soldOut ? "Sold out" : "Opening soon"}</button>
       </div>

@@ -16,3 +16,20 @@ export function BrushLoader({ label, hint }: { label: string; hint?: string }) {
     </div>
   );
 }
+
+/** Compact brush stroke for inline slots (e.g. Mail Club price while catalogue loads). */
+export function PriceLoader() {
+  return (
+    <span role="status" aria-live="polite" aria-label="Checking price" className="inline-flex items-center gap-2.5">
+      <svg viewBox="0 0 56 18" className="h-4 w-14 shrink-0" aria-hidden>
+        <path
+          d="M3,11 C14,3 22,15 32,9 S48,5 53,10"
+          fill="none" stroke="var(--color-pink)" strokeWidth="2.4" strokeLinecap="round"
+          style={{ strokeDasharray: 90, strokeDashoffset: 90 }}
+          className="animate-[draw_1.2s_ease-in-out_infinite_alternate] motion-reduce:animate-none motion-reduce:[stroke-dashoffset:0]"
+        />
+      </svg>
+      <span className="eyebrow text-muted-foreground">Checking price…</span>
+    </span>
+  );
+}
