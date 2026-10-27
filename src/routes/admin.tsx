@@ -2,9 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { isAdminEmail } from "@/lib/admins";
 import { useAuth } from "@/lib/auth";
-import { listOffers, removeOffer, saveOffer, type Offer } from "@/lib/offers";
+import { listOffers, percentFromFlat, removeOffer, saveOffer, type Offer } from "@/lib/offers";
 import { cancelOrder, confirmOrder, listAllOrders, markPaid, markShipped, watchAllOrders } from "@/lib/orders-db";
-import { isMailClub, orderStatusLabel, PROMO_CODE, type SavedOrder } from "@/lib/orders.functions";
+import { isMailClub, orderStatusLabel, type SavedOrder } from "@/lib/orders.functions";
 import { CATEGORY_LABEL, HAMPER_TIERS, PRODUCTS, catalogState, formatPrice, liveProducts, type Category, type Listing } from "@/lib/products";
 import { COLLECTIONS, compressImage, listReviews, listTickets, removeReview, saveListing, setTicketStatus, suggestReply, useCatalog, type Review, type Ticket } from "@/lib/studio";
 
@@ -558,15 +558,33 @@ function ReviewsTab({ reviews, setReviews, setError }: { reviews: Review[] | nul
   );
 }
 
+function offerDiscountLabel(offer: Offer) {
+  if (offer.flatOff > 0) return `${formatPrice(offer.flatOff)} off`;
+  if (offer.percent === 0) return "Free shipping";
+  return `${offer.percent}% off`;
+}
+
 function OffersTab({ setError }: { setError: (message: string | null) => void }) {
   const [offers, setOffers] = useState<Offer[] | null>(null);
   const [code, setCode] = useState("");
   const [label, setLabel] = useState("");
+  const [description, setDescription] = useState("");
+  const [discountMode, setDiscountMode] = useState<"percent" | "flat">("percent");
   const [percent, setPercent] = useState("10");
+  const [flatOff, setFlatOff] = useState("");
   const [minOrder, setMinOrder] = useState("");
   const [customersOnly, setCustomersOnly] = useState(true);
+  const [activeOnCreate, setActiveOnCreate] = useState(true);
   const [busy, setBusy] = useState(false);
   useEffect(() => { listOffers().then(setOffers).catch((err: unknown) => setError(err instanceof Error ? err.message : "We couldn't load offers.")); }, [setError]);
+
+  async function refresh() {
+    setOffers(await listOffers());
+  }
+
+  const flatRupees = Number(flatOff) || 0;
+  const minRupees = Number(minOrder) || 0;
+  const flatAsPercent = flatRupees > 0 && minRupees > 0 ? percentFromFlat(flatRupees, minRupees) : null;
 
   return (
     <section className="mt-4">
@@ -576,10 +594,22 @@ function OffersTab({ setError }: { setError: (message: string | null) => void })
         setBusy(true);
         setError(null);
         try {
-          await saveOffer({ code, label, percent: Number(percent), minOrder: Number(minOrder) || 0, customersOnly, active: true });
-          setOffers(await listOffers());
+          if (discountMode === "flat" && flatRupees < 1) throw new Error("Enter how many rupees off, or switch to percent.");
+          await saveOffer({
+            code,
+            label,
+            description,
+            percent: discountMode === "percent" ? Number(percent) : 0,
+            flatOff: discountMode === "flat" ? flatRupees : 0,
+            minOrder: minRupees,
+            customersOnly,
+            active: activeOnCreate,
+          });
+          await refresh();
           setCode("");
           setLabel("");
+          setDescription("");
+          setFlatOff("");
         } catch (err) {
           setError(err instanceof Error ? err.message : "We couldn't save that offer.");
         } finally {
@@ -588,27 +618,52 @@ function OffersTab({ setError }: { setError: (message: string | null) => void })
       }}>
         <label className="leading-tight"><span className="text-[0.65rem] uppercase tracking-[0.06em] text-muted-foreground">Code</span><input value={code} onChange={(e) => setCode(e.target.value)} required className="field !py-1 text-sm" placeholder="FRI26" /></label>
         <label className="leading-tight"><span className="text-[0.65rem] uppercase tracking-[0.06em] text-muted-foreground">Label</span><input value={label} onChange={(e) => setLabel(e.target.value)} className="field !py-1 text-sm" placeholder="Friendship day offer" /></label>
-        <label className="leading-tight"><span className="text-[0.65rem] uppercase tracking-[0.06em] text-muted-foreground">Percent off (%)</span><input type="number" min={0} max={100} value={percent} onChange={(e) => setPercent(e.target.value)} className="field !py-1 text-sm" /></label>
+        <label className="leading-tight"><span className="text-[0.65rem] uppercase tracking-[0.06em] text-muted-foreground">Description</span><input value={description} onChange={(e) => setDescription(e.target.value)} maxLength={200} className="field !py-1 text-sm" placeholder="Shown in Admin — what this offer does" /></label>
+        <div className="flex flex-wrap gap-1.5">
+          <button type="button" className={pill(discountMode === "percent")} onClick={() => setDiscountMode("percent")}>Percent off</button>
+          <button type="button" className={pill(discountMode === "flat")} onClick={() => setDiscountMode("flat")}>₹ amount off</button>
+        </div>
+        {discountMode === "percent" ? (
+          <label className="leading-tight"><span className="text-[0.65rem] uppercase tracking-[0.06em] text-muted-foreground">Percent off (%)</span><input type="number" min={0} max={100} value={percent} onChange={(e) => setPercent(e.target.value)} className="field !py-1 text-sm" /></label>
+        ) : (
+          <label className="leading-tight"><span className="text-[0.65rem] uppercase tracking-[0.06em] text-muted-foreground">Amount off ₹</span><input type="number" min={1} value={flatOff} onChange={(e) => setFlatOff(e.target.value)} required className="field !py-1 text-sm" placeholder="50" /></label>
+        )}
         <label className="leading-tight"><span className="text-[0.65rem] uppercase tracking-[0.06em] text-muted-foreground">Minimum order ₹</span><input type="number" min={0} value={minOrder} onChange={(e) => setMinOrder(e.target.value)} className="field !py-1 text-sm" placeholder="Optional" /></label>
+        {discountMode === "flat" && flatAsPercent != null ? (
+          <p className="text-xs leading-snug text-muted-foreground">That’s about {flatAsPercent}% of a {formatPrice(minRupees)} order — shoppers still get a fixed {formatPrice(flatRupees)} off.</p>
+        ) : null}
         <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={customersOnly} onChange={(e) => setCustomersOnly(e.target.checked)} /> Active customers can use it</label>
-        <p className="text-xs leading-snug text-muted-foreground">0% off removes shipping. A higher percent comes off the pieces and keeps ₹90 shipping. HALFSKETCH06 always removes shipping.</p>
+        <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={activeOnCreate} onChange={(e) => setActiveOnCreate(e.target.checked)} /> Active on create</label>
+        <p className="text-xs leading-snug text-muted-foreground">0% off removes shipping. A percent or ₹ amount comes off the pieces and keeps ₹90 shipping. Set a minimum order if the offer should unlock only above that total.</p>
         <button className="btn-ink justify-center !py-2 !text-[0.62rem]" disabled={busy}>{busy ? "Saving…" : "Create offer"}</button>
       </form>
       <ul className="mt-2 divide-y rounded-xl border">
-        <li className="flex items-center justify-between gap-2 px-3 py-2">
-          <div><p className="font-medium leading-tight">{PROMO_CODE}</p><p className="text-xs leading-snug text-muted-foreground">Free shipping · built in</p></div>
-          <span className="rounded-full bg-foreground px-2 py-0.5 text-[0.65rem] text-background">Active</span>
-        </li>
-        {(offers ?? []).filter((offer) => offer.code !== PROMO_CODE).map((offer) => (
+        {(offers ?? []).length === 0 ? (
+          <li className="px-3 py-3 text-xs text-muted-foreground">No offers yet — create one above.</li>
+        ) : null}
+        {(offers ?? []).map((offer) => (
           <li key={offer.code} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
             <div className="min-w-0">
               <p className="font-medium leading-tight">{offer.code}</p>
-              <p className="text-xs leading-snug text-muted-foreground">{offer.label} · {offer.percent}% off{offer.minOrder ? ` · min ${formatPrice(offer.minOrder)}` : ""}{offer.customersOnly ? " · customers only" : ""}</p>
+              <p className="text-xs leading-snug text-muted-foreground">{offer.label} · {offerDiscountLabel(offer)}{offer.minOrder ? ` · min ${formatPrice(offer.minOrder)}` : ""}{offer.customersOnly ? " · customers only" : ""}</p>
+              {offer.description ? <p className="text-xs leading-snug text-muted-foreground line-clamp-2">{offer.description}</p> : null}
             </div>
-            <button type="button" className={pill(false)} onClick={async () => {
-              setError(null);
-              try { await removeOffer(offer.code); setOffers(await listOffers()); } catch (err) { setError(err instanceof Error ? err.message : "We couldn't remove that offer."); }
-            }}>Remove</button>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className={pill(offer.active)}>{offer.active ? "Active" : "Paused"}</span>
+              <button type="button" className={pill(false)} onClick={async () => {
+                setError(null);
+                try {
+                  await saveOffer({ ...offer, active: !offer.active });
+                  await refresh();
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "We couldn't update that offer.");
+                }
+              }}>{offer.active ? "Pause" : "Activate"}</button>
+              <button type="button" className={pill(false)} onClick={async () => {
+                setError(null);
+                try { await removeOffer(offer.code); await refresh(); } catch (err) { setError(err instanceof Error ? err.message : "We couldn't remove that offer."); }
+              }}>Remove</button>
+            </div>
           </li>
         ))}
       </ul>

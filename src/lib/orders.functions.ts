@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { listOffersServer, PROMO_CODE, quote, SHIPPING_RUPEES } from "./offers";
+import { listOffersServer, quote, SHIPPING_RUPEES } from "./offers";
 import { hasOrdered, serverProduct } from "./studio";
 
 export interface Customer {
@@ -7,7 +7,7 @@ export interface Customer {
   address: string; city: string; state: string; postalCode: string;
 }
 export interface OrderItem { slug: string; name: string; price: number; quantity: number; edition?: string }
-export { PROMO_CODE, SHIPPING_RUPEES };
+export { SHIPPING_RUPEES };
 export const PROMO_KEY = "halfsketch-promo";
 export const PENDING_CHECKOUT_KEY = "halfsketch-pending-checkout";
 

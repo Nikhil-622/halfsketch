@@ -10,6 +10,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+
 export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
@@ -63,17 +64,25 @@ function Checkout() {
     listOffers().then(setOffers).catch(() => setOffers([]));
   }, []);
   const priced = quote(subtotal, promo, offers, true);
+  // Hold a known code under the minimum so the shopper sees the unlock path; still charge full shipping until ok.
   const shipping = priced.ok ? priced.shipping : SHIPPING_RUPEES;
   const discount = priced.ok ? priced.discount : 0;
   const total = Math.max(0, subtotal - discount + shipping);
+  const underMin = Boolean(promo) && priced.reason === "min_order";
+  const freeUnlocked = priced.ok && priced.shipping === 0;
 
   async function applyPromo() {
     const code = draft.trim().toUpperCase();
-    const offer = offers.find((item) => item.active && item.code === code);
+    const offer = offers.find((item) => item.code === code);
     const active = offer?.customersOnly ? await hasOrdered(profile?.email || "") : true;
     const next = quote(subtotal, draft, offers, active);
-    setPromo(next.ok ? draft : "");
-    setRejected(!next.ok);
+    if (next.ok || next.reason === "min_order") {
+      setPromo(draft.trim());
+      setRejected(false);
+      return;
+    }
+    setPromo("");
+    setRejected(Boolean(code));
   }
 
   const [needSignIn, setNeedSignIn] = useState(false);
@@ -146,6 +155,18 @@ function Checkout() {
             <button type="button" className="btn-line shrink-0" onClick={applyPromo}>Apply</button>
           </div>
           {rejected ? <p className="mt-2 text-sm text-pink">That code doesn't apply.</p> : null}
+          {underMin && priced.need != null && priced.minOrder != null ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {(() => {
+                const held = offers.find((o) => o.code === promo.trim().toUpperCase());
+                const freesShipping = held != null && held.flatOff === 0 && held.percent === 0;
+                return freesShipping
+                  ? `Free shipping from ${formatPrice(priced.minOrder)} — add ${formatPrice(priced.need)} more to unlock it.`
+                  : `Offer from ${formatPrice(priced.minOrder)} — add ${formatPrice(priced.need)} more to unlock it.`;
+              })()}
+            </p>
+          ) : null}
+          {freeUnlocked ? <p className="mt-2 text-sm text-muted-foreground">Hurray — you just unlocked free shipping.</p> : null}
           <dl className="mt-6 space-y-2 border-t pt-4 text-sm">
             <div className="flex justify-between"><dt>Subtotal</dt><dd className="tabular-nums">{formatPrice(subtotal)}</dd></div>
             {discount > 0 ? <div className="flex justify-between"><dt>Offer</dt><dd className="tabular-nums">−{formatPrice(discount)}</dd></div> : null}

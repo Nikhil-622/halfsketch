@@ -41,14 +41,18 @@ service cloud.firestore {
     match /offers/{code} {
       allow read: if true;
       allow create, update: if isAdmin()
-        && request.resource.data.keys().hasOnly(["code", "label", "active", "percent", "minOrder", "customersOnly"])
+        && request.resource.data.keys().hasOnly(["code", "label", "description", "active", "percent", "flatOff", "minOrder", "customersOnly"])
         && request.resource.data.code == code
         && request.resource.data.code is string
         && request.resource.data.label is string
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 200
         && request.resource.data.active is bool
         && request.resource.data.percent is int
         && request.resource.data.percent >= 0
         && request.resource.data.percent <= 100
+        && request.resource.data.flatOff is int
+        && request.resource.data.flatOff >= 0
         && request.resource.data.minOrder is int
         && request.resource.data.minOrder >= 0
         && request.resource.data.customersOnly is bool;
